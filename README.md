@@ -10,3 +10,14 @@ To run the app:
 ```bash
 flutter run
 ```
+
+## Running Tests
+
+To run the analyzer and test suite locally:
+
+```bash
+flutter analyze
+flutter test
+```
+
+Make sure you have the Flutter SDK installed and dependencies fetched with `flutter pub get`.

@@ -4,7 +4,9 @@ import '../models/book_model.dart';
 
 /// Displays the list of imported books.
 class LibraryScreen extends StatefulWidget {
-  const LibraryScreen({super.key});
+  final Future<List<BookModel>> Function()? fetchBooks;
+
+  const LibraryScreen({super.key, this.fetchBooks});
 
   @override
   State<LibraryScreen> createState() => _LibraryScreenState();
@@ -16,7 +18,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   @override
   void initState() {
     super.initState();
-    _books = DbHelper.instance.fetchBooks();
+    _books = (widget.fetchBooks ?? DbHelper().fetchBooks)();
   }
 
   @override
