@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../models/book_model.dart';
+
+/// A very minimal reader screen that simply displays the selected book.
 
 class ReaderScreen extends StatelessWidget {
   final BookModel book;

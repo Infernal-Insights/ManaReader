@@ -8,7 +8,9 @@ import 'package:file_picker/file_picker.dart';
 
 /// Displays the list of imported books.
 class LibraryScreen extends StatefulWidget {
-  const LibraryScreen({super.key});
+  final Future<List<BookModel>> Function()? fetchBooks;
+
+  const LibraryScreen({super.key, this.fetchBooks});
 
   @override
   State<LibraryScreen> createState() => _LibraryScreenState();
@@ -26,6 +28,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   @override
   void initState() {
     super.initState();
+
     _loadBooks();
     _initFilters();
   }
@@ -47,6 +50,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       _tags = tags;
       _authors = authors;
     });
+
   }
 
   @override

@@ -32,3 +32,19 @@ Upcoming features include:
 
 Mana Reader is still in an early stage, but contributions and ideas are welcome!
 
+
+```bash
+flutter run
+```
+
+## Running Tests
+
+To run the analyzer and test suite locally:
+
+```bash
+flutter analyze
+flutter test
+```
+
+Make sure you have the Flutter SDK installed and dependencies fetched with `flutter pub get`.
+
