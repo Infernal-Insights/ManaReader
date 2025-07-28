@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'screens/library_screen.dart';
-
 void main() => runApp(const ManaReaderApp());
 
 class ManaReaderApp extends StatelessWidget {
