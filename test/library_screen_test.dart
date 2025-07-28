@@ -25,7 +25,9 @@ void main() {
 
   testWidgets('shows empty message with no books', (tester) async {
     await tester.pumpWidget(MaterialApp(
-      home: LibraryScreen(fetchBooks: () async => []),
+      home: LibraryScreen(
+        fetchBooks: ({tags, author, unread}) async => [],
+      ),
     ));
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
@@ -36,7 +38,9 @@ void main() {
   testWidgets('displays inserted books', (tester) async {
     final books = [BookModel(title: 'A', path: '/tmp/a.cbz', language: 'en')];
     await tester.pumpWidget(MaterialApp(
-      home: LibraryScreen(fetchBooks: () async => books),
+      home: LibraryScreen(
+        fetchBooks: ({tags, author, unread}) async => books,
+      ),
     ));
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));

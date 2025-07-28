@@ -8,7 +8,11 @@ import 'package:file_picker/file_picker.dart';
 
 /// Displays the list of imported books.
 class LibraryScreen extends StatefulWidget {
-  final Future<List<BookModel>> Function()? fetchBooks;
+  final Future<List<BookModel>> Function({
+    List<String>? tags,
+    String? author,
+    bool? unread,
+  })? fetchBooks;
 
   const LibraryScreen({super.key, this.fetchBooks});
 
@@ -35,7 +39,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   void _loadBooks() {
     setState(() {
-      _books = DbHelper.instance.fetchBooks(
+      final fetch = widget.fetchBooks ?? DbHelper.instance.fetchBooks;
+      _books = fetch(
         tags: _selectedTag != null ? [_selectedTag!] : null,
         author: _selectedAuthor,
         unread: _showUnread ? true : null,
@@ -207,9 +212,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       final importer = ImporterFactory.fromPath(path);
       final book = await importer.import(path);
       await DbHelper.instance.insertBook(book);
-      setState(() {
-        _books = DbHelper.instance.fetchBooks();
-      });
+      _loadBooks();
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

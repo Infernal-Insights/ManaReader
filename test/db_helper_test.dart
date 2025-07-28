@@ -52,5 +52,42 @@ void main() {
       expect(updated.lastPage, equals(5));
     });
 
+    test('fetch by id', () async {
+      final book =
+          BookModel(title: 'ById', path: '/tmp/test.cbz', language: 'en');
+      final id = await dbHelper.insertBook(book);
+      final fetched = await dbHelper.fetchBook(id);
+      expect(fetched, isNotNull);
+      expect(fetched!.id, equals(id));
+      expect(fetched.title, equals('ById'));
+    });
+
+    test('update book metadata', () async {
+      final id = await dbHelper.insertBook(
+          BookModel(title: 'Old', path: '/tmp/test.cbz', language: 'en'));
+      final updated = BookModel(
+        id: id,
+        title: 'New',
+        path: '/tmp/test.cbz',
+        language: 'jp',
+        author: 'Me',
+        tags: ['tag'],
+      );
+      await dbHelper.updateBook(updated);
+      final fetched = await dbHelper.fetchBook(id);
+      expect(fetched!.title, equals('New'));
+      expect(fetched.language, equals('jp'));
+      expect(fetched.author, equals('Me'));
+      expect(fetched.tags, equals(['tag']));
+    });
+
+    test('delete book', () async {
+      final id = await dbHelper
+          .insertBook(BookModel(title: 'Del', path: '/tmp/a.cbz', language: 'en'));
+      await dbHelper.deleteBook(id);
+      final books = await dbHelper.fetchBooks();
+      expect(books, isEmpty);
+    });
+
   });
 }
