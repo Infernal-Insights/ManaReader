@@ -32,6 +32,7 @@ class DbHelper {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT,
             path TEXT,
+            author TEXT,
             language TEXT,
             tags TEXT,
             last_page INTEGER
@@ -54,44 +55,57 @@ class DbHelper {
     return db.insert('books', book.toMap());
   }
 
-  Future<BookModel?> fetchBook(int id) async {
+
+  Future<List<BookModel>> fetchBooks({
+    List<String>? tags,
+    String? author,
+    bool? unread,
+  }) async {
     final db = await database;
+    final where = <String>[];
+    final args = <dynamic>[];
+    if (tags != null && tags.isNotEmpty) {
+      for (final tag in tags) {
+        where.add('tags LIKE ?');
+        args.add('%' + tag + '%');
+      }
+    }
+    if (author != null && author.isNotEmpty) {
+      where.add('author = ?');
+      args.add(author);
+    }
+    if (unread != null) {
+      where.add(unread ? 'last_page = 0' : 'last_page > 0');
+    }
     final maps = await db.query(
       'books',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
+      where: where.isEmpty ? null : where.join(' AND '),
+      whereArgs: args,
     );
-    if (maps.isEmpty) return null;
-    return BookModel.fromMap(maps.first);
-  }
-
-  Future<List<BookModel>> fetchBooks() async {
-    final db = await database;
-    final maps = await db.query('books');
     return maps.map((e) => BookModel.fromMap(e)).toList();
   }
 
-  Future<int> updateBook(int id,
-      {String? title, String? path, List<String>? tags}) async {
+  Future<List<String>> fetchAllAuthors() async {
     final db = await database;
-    final values = <String, Object?>{};
-    if (title != null) values['title'] = title;
-    if (path != null) values['path'] = path;
-    if (tags != null) values['tags'] = tags.join(',');
-    if (values.isEmpty) return 0;
-    return db.update(
-      'books',
-      values,
-      where: 'id = ?',
-      whereArgs: [id],
+    final maps = await db.rawQuery(
+      'SELECT DISTINCT author FROM books WHERE author IS NOT NULL AND author != ""',
     );
+    return maps.map((e) => e['author'] as String).toList();
   }
 
-  Future<int> deleteBook(int id) async {
+  Future<List<String>> fetchAllTags() async {
     final db = await database;
-    await db.delete('history', where: 'book_id = ?', whereArgs: [id]);
-    return db.delete('books', where: 'id = ?', whereArgs: [id]);
+    final maps = await db.query('books', columns: ['tags']);
+    final set = <String>{};
+    for (final map in maps) {
+      final tagStr = map['tags'] as String? ?? '';
+      set.addAll(tagStr
+          .split(',')
+          .map((e) => e.trim())
+          .where((element) => element.isNotEmpty));
+    }
+    return set.toList();
+
   }
 
   Future<void> updateProgress(int id, int page) async {
