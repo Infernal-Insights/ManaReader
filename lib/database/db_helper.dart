@@ -56,6 +56,24 @@ class DbHelper {
     return db.insert('books', book.toMap());
   }
 
+  Future<BookModel?> fetchBook(int id) async {
+    final db = await database;
+    final maps = await db.query('books', where: 'id = ?', whereArgs: [id]);
+    if (maps.isEmpty) return null;
+    return BookModel.fromMap(maps.first);
+  }
+
+  Future<int> updateBook(BookModel book) async {
+    if (book.id == null) throw ArgumentError('Book id cannot be null');
+    final db = await database;
+    return db.update('books', book.toMap(), where: 'id = ?', whereArgs: [book.id]);
+  }
+
+  Future<int> deleteBook(int id) async {
+    final db = await database;
+    return db.delete('books', where: 'id = ?', whereArgs: [id]);
+  }
+
 
   /// Imports a book from the given path and resolves metadata using [service].
   Future<int> importBook(String path, MetadataService service) async {
@@ -71,15 +89,18 @@ class DbHelper {
     return insertBook(book);
   }
 
-  Future<List<BookModel>> fetchBooks() async {
-
+  Future<List<BookModel>> fetchBooks({
+    List<String>? tags,
+    String? author,
+    bool? unread,
+  }) async {
     final db = await database;
     final where = <String>[];
     final args = <dynamic>[];
     if (tags != null && tags.isNotEmpty) {
       for (final tag in tags) {
         where.add('tags LIKE ?');
-        args.add('%' + tag + '%');
+        args.add('%$tag%');
       }
     }
     if (author != null && author.isNotEmpty) {
