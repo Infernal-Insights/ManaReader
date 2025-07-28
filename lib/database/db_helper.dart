@@ -38,6 +38,14 @@ class DbHelper {
             last_page INTEGER
           )
         ''');
+        await db.execute('''
+          CREATE TABLE history(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            book_id INTEGER,
+            page INTEGER,
+            timestamp INTEGER
+          )
+        ''');
       },
     );
   }
@@ -46,6 +54,7 @@ class DbHelper {
     final db = await database;
     return db.insert('books', book.toMap());
   }
+
 
   Future<List<BookModel>> fetchBooks({
     List<String>? tags,
@@ -96,6 +105,7 @@ class DbHelper {
           .where((element) => element.isNotEmpty));
     }
     return set.toList();
+
   }
 
   Future<void> updateProgress(int id, int page) async {
@@ -106,5 +116,20 @@ class DbHelper {
       where: 'id = ?',
       whereArgs: [id],
     );
+    await insertHistory(id, page);
+  }
+
+  Future<int> insertHistory(int bookId, int page) async {
+    final db = await database;
+    return db.insert('history', {
+      'book_id': bookId,
+      'page': page,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> fetchHistory(int bookId) async {
+    final db = await database;
+    return db.query('history', where: 'book_id = ?', whereArgs: [bookId]);
   }
 }
