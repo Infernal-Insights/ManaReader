@@ -12,6 +12,7 @@ dependencies:
 
   sqflite: ^2.3.2
   path_provider: ^2.1.1
+  http: ^0.13.6
 
 
 dev_dependencies:

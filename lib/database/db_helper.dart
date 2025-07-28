@@ -1,8 +1,9 @@
-import 'package:path/path.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../models/book_model.dart';
+import '../metadata/metadata_service.dart';
 
 /// Handles initialization and CRUD operations for the local SQLite database.
 class DbHelper {
@@ -22,7 +23,7 @@ class DbHelper {
 
   Future<Database> _initDb() async {
     final documentsDir = await getApplicationDocumentsDirectory();
-    final path = join(documentsDir.path, 'mana_reader.db');
+    final path = p.join(documentsDir.path, 'mana_reader.db');
     return openDatabase(
       path,
       version: 1,
@@ -44,6 +45,20 @@ class DbHelper {
   Future<int> insertBook(BookModel book) async {
     final db = await database;
     return db.insert('books', book.toMap());
+  }
+
+  /// Imports a book from the given path and resolves metadata using [service].
+  Future<int> importBook(String path, MetadataService service) async {
+    final name = p.basenameWithoutExtension(path);
+    final meta = await service.resolve(name);
+
+    final book = BookModel(
+      title: meta?.title ?? name,
+      path: path,
+      language: meta?.language ?? 'unknown',
+      tags: meta?.tags ?? const [],
+    );
+    return insertBook(book);
   }
 
   Future<List<BookModel>> fetchBooks() async {
