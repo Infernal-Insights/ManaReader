@@ -2,7 +2,8 @@
 
 A minimal Flutter project for a cross-platform manga and doujinshi reader.
 
-This repository currently contains only a simple app skeleton. Further development will add features such as metadata tagging, importers, and a reading interface.
+Current features include a basic SQLite database and a simple library screen. Future updates will expand the reader UI, metadata importers, and more.
+
 
 To run the app:
 

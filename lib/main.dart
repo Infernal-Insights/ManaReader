@@ -10,9 +10,7 @@ class ManaReaderApp extends StatelessWidget {
     return MaterialApp(
       title: 'Mana Reader',
       theme: ThemeData.dark(),
-      home: const Scaffold(
-        body: Center(child: Text('Mana Reader')),
-      ),
+      home: const LibraryScreen(),
     );
   }
 }
