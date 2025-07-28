@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import '../database/db_helper.dart';
 import '../models/book_model.dart';
-import 'reader_screen.dart';
+
+import '../importers/importer_factory.dart';
+import 'package:file_picker/file_picker.dart';
+
 
 /// Displays the list of imported books.
 class LibraryScreen extends StatefulWidget {
@@ -184,6 +187,31 @@ class _LibraryScreenState extends State<LibraryScreen> {
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _pickAndImport,
+        child: const Icon(Icons.add),
+      ),
     );
+  }
+
+  Future<void> _pickAndImport() async {
+    final result = await FilePicker.platform.pickFiles();
+    if (result == null || result.files.isEmpty) return;
+    final path = result.files.single.path;
+    if (path == null) return;
+    try {
+      final importer = ImporterFactory.fromPath(path);
+      final book = await importer.import(path);
+      await DbHelper.instance.insertBook(book);
+      setState(() {
+        _books = DbHelper.instance.fetchBooks();
+      });
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Import failed: $e')),
+        );
+      }
+    }
   }
 }

@@ -6,6 +6,7 @@ class BookModel {
   final String language;
   final List<String> tags;
   final int lastPage;
+  final List<String> pages;
 
   BookModel({
     this.id,
@@ -15,6 +16,7 @@ class BookModel {
     required this.language,
     this.tags = const [],
     this.lastPage = 0,
+    this.pages = const [],
   });
 
   Map<String, dynamic> toMap() {
