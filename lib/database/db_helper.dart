@@ -37,6 +37,14 @@ class DbHelper {
             last_page INTEGER
           )
         ''');
+        await db.execute('''
+          CREATE TABLE history(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            book_id INTEGER,
+            page INTEGER,
+            timestamp INTEGER
+          )
+        ''');
       },
     );
   }
@@ -46,10 +54,44 @@ class DbHelper {
     return db.insert('books', book.toMap());
   }
 
+  Future<BookModel?> fetchBook(int id) async {
+    final db = await database;
+    final maps = await db.query(
+      'books',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (maps.isEmpty) return null;
+    return BookModel.fromMap(maps.first);
+  }
+
   Future<List<BookModel>> fetchBooks() async {
     final db = await database;
     final maps = await db.query('books');
     return maps.map((e) => BookModel.fromMap(e)).toList();
+  }
+
+  Future<int> updateBook(int id,
+      {String? title, String? path, List<String>? tags}) async {
+    final db = await database;
+    final values = <String, Object?>{};
+    if (title != null) values['title'] = title;
+    if (path != null) values['path'] = path;
+    if (tags != null) values['tags'] = tags.join(',');
+    if (values.isEmpty) return 0;
+    return db.update(
+      'books',
+      values,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<int> deleteBook(int id) async {
+    final db = await database;
+    await db.delete('history', where: 'book_id = ?', whereArgs: [id]);
+    return db.delete('books', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> updateProgress(int id, int page) async {
@@ -60,5 +102,20 @@ class DbHelper {
       where: 'id = ?',
       whereArgs: [id],
     );
+    await insertHistory(id, page);
+  }
+
+  Future<int> insertHistory(int bookId, int page) async {
+    final db = await database;
+    return db.insert('history', {
+      'book_id': bookId,
+      'page': page,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> fetchHistory(int bookId) async {
+    final db = await database;
+    return db.query('history', where: 'book_id = ?', whereArgs: [bookId]);
   }
 }
