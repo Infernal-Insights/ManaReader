@@ -1,0 +1,64 @@
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:sqflite/sqflite.dart';
+
+import '../models/book_model.dart';
+
+/// Handles initialization and CRUD operations for the local SQLite database.
+class DbHelper {
+  static final DbHelper instance = DbHelper._internal();
+
+  factory DbHelper() => instance;
+
+  DbHelper._internal();
+
+  Database? _db;
+
+  Future<Database> get database async {
+    if (_db != null) return _db!;
+    _db = await _initDb();
+    return _db!;
+  }
+
+  Future<Database> _initDb() async {
+    final documentsDir = await getApplicationDocumentsDirectory();
+    final path = join(documentsDir.path, 'mana_reader.db');
+    return openDatabase(
+      path,
+      version: 1,
+      onCreate: (db, version) async {
+        await db.execute('''
+          CREATE TABLE books(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT,
+            path TEXT,
+            language TEXT,
+            tags TEXT,
+            last_page INTEGER
+          )
+        ''');
+      },
+    );
+  }
+
+  Future<int> insertBook(BookModel book) async {
+    final db = await database;
+    return db.insert('books', book.toMap());
+  }
+
+  Future<List<BookModel>> fetchBooks() async {
+    final db = await database;
+    final maps = await db.query('books');
+    return maps.map((e) => BookModel.fromMap(e)).toList();
+  }
+
+  Future<void> updateProgress(int id, int page) async {
+    final db = await database;
+    await db.update(
+      'books',
+      {'last_page': page},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+}
