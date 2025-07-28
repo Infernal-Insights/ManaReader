@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'importer.dart';
 import 'zip_importer.dart';
 import 'rar_importer.dart';
 import 'seven_zip_importer.dart';
+import 'pdf_importer.dart';
+import 'folder_importer.dart';
 
 class ImporterFactory {
   static Importer fromPath(String path) {
@@ -12,6 +16,10 @@ class ImporterFactory {
       return RarImporter();
     } else if (lower.endsWith('.cb7') || lower.endsWith('.7z')) {
       return SevenZipImporter();
+    } else if (lower.endsWith('.pdf')) {
+      return PdfImporter();
+    } else if (FileSystemEntity.isDirectorySync(path)) {
+      return FolderImporter();
     } else {
       throw UnsupportedError('Unsupported archive type');
     }

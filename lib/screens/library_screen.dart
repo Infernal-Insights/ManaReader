@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../database/db_helper.dart';
 import '../models/book_model.dart';
 
-import '../importers/importer_factory.dart';
+import '../import/importer.dart';
 import 'package:file_picker/file_picker.dart';
 
 
@@ -209,9 +209,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final path = result.files.single.path;
     if (path == null) return;
     try {
-      final importer = ImporterFactory.fromPath(path);
-      final book = await importer.import(path);
-      await DbHelper.instance.insertBook(book);
+      final importer = Importer();
+      await importer.importPath(path);
       _loadBooks();
     } catch (e) {
       if (context.mounted) {
