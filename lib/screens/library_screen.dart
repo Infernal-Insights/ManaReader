@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../database/db_helper.dart';
 import '../models/book_model.dart';
+import 'reader_screen.dart';
 
 /// Displays the list of imported books.
 class LibraryScreen extends StatefulWidget {
@@ -45,7 +46,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
             itemBuilder: (context, index) {
               final book = books[index];
               return GestureDetector(
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ReaderScreen(book: book),
+                    ),
+                  );
+                },
                 child: Container(
                   color: Colors.grey.shade800,
                   alignment: Alignment.center,
