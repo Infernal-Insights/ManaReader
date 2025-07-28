@@ -1,11 +1,37 @@
 # Mana Reader
 
-A minimal Flutter project for a cross-platform manga and doujinshi reader.
+Mana Reader aims to be a lightweight, cross‑platform manga and doujinshi reader built with Flutter. The project provides a simple foundation for organizing and viewing local comic archives.
 
-Current features include a basic SQLite database and a simple library screen. Future updates will expand the reader UI, metadata importers, and more.
+## Current Features
 
+- **SQLite library**: stores imported books with title, language, tags and last read page.
+- **Library screen**: shows all imported books in a grid layout.
+- **Cross‑platform boilerplate**: Android project files are present and stubs exist for iOS, Linux, macOS and Windows.
 
-To run the app:
+## Requirements
+
+- **Dart**: >=2.17.0 <3.0.0
+- **Flutter**: tested with Flutter 3; newer versions in the same major series should work.
+
+## Running
+
+From the repository root run `flutter run` and select the desired target device.
+
+- **Android**: ensure an emulator or physical device is available.
+- **iOS / macOS**: project folders are included but contain only placeholders. Platform support will be added later.
+- **Linux / Windows**: similarly include placeholder folders for future desktop support.
+
+## Roadmap
+
+Upcoming features include:
+
+- A dedicated reader UI for viewing pages and tracking progress.
+- Metadata plugins to fetch information from sources like online databases.
+- File importers for common archive formats.
+- Localization so the UI can be translated into multiple languages.
+
+Mana Reader is still in an early stage, but contributions and ideas are welcome!
+
 
 ```bash
 flutter run
@@ -21,3 +47,4 @@ flutter test
 ```
 
 Make sure you have the Flutter SDK installed and dependencies fetched with `flutter pub get`.
+

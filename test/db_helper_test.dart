@@ -51,5 +51,6 @@ void main() {
       final updated = books.singleWhere((b) => b.id == id);
       expect(updated.lastPage, equals(5));
     });
+
   });
 }
