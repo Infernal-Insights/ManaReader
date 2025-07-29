@@ -53,3 +53,7 @@ ios/Runner/Assets.xcassets/LaunchImage.imageset/*
 macos/Runner/Assets.xcassets/*.png
 windows/runner/resources/app_icon.ico
 
+android/app/src/main/res/mipmap*/ic_launcher.png
+ios/Runner/Assets.xcassets/**
+macos/Runner/Assets.xcassets/**
+windows/runner/resources/*.ico
