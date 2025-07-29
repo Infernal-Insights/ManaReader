@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../database/db_helper.dart';
 import '../models/book_model.dart';
@@ -28,7 +29,7 @@ class HistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('History')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.historyTitle)),
       body: FutureBuilder<List<BookModel>>(
         future: _fetchHistory(),
         builder: (context, snapshot) {
@@ -37,7 +38,7 @@ class HistoryScreen extends StatelessWidget {
           }
           final books = snapshot.data!;
           if (books.isEmpty) {
-            return const Center(child: Text('No history'));
+            return Center(child: Text(AppLocalizations.of(context)!.noHistory));
           }
           return ListView.builder(
             itemCount: books.length,

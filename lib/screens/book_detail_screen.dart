@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../database/db_helper.dart';
 import '../models/book_model.dart';
@@ -60,7 +61,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Book Details'),
+        title: Text(AppLocalizations.of(context)!.bookDetails),
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
@@ -74,20 +75,19 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
           children: [
             TextField(
               controller: _titleController,
-              decoration: const InputDecoration(labelText: 'Title'),
+              decoration: InputDecoration(labelText: AppLocalizations.of(context)!.sortTitle),
             ),
             TextField(
               controller: _authorController,
-              decoration: const InputDecoration(labelText: 'Author'),
+              decoration: InputDecoration(labelText: AppLocalizations.of(context)!.author),
             ),
             TextField(
               controller: _languageController,
-              decoration: const InputDecoration(labelText: 'Language'),
+              decoration: InputDecoration(labelText: AppLocalizations.of(context)!.language),
             ),
             TextField(
               controller: _tagsController,
-              decoration:
-                  const InputDecoration(labelText: 'Tags (comma separated)'),
+              decoration: InputDecoration(labelText: AppLocalizations.of(context)!.tagsCommaSeparated),
             ),
           ],
         ),

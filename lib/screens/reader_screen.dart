@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../database/db_helper.dart';
 import '../models/book_model.dart';
@@ -175,8 +176,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('End of book'),
-        content: const Text('Choose an option'),
+        title: Text(AppLocalizations.of(context)!.endOfBook),
+        content: Text(AppLocalizations.of(context)!.chooseOption),
         actions: [
           if (next != null)
             TextButton(
@@ -187,7 +188,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                   MaterialPageRoute(builder: (_) => ReaderScreen(book: next!)),
                 );
               },
-              child: const Text('Next Related'),
+              child: Text(AppLocalizations.of(context)!.nextRelated),
             ),
           if (random != null)
             TextButton(
@@ -199,14 +200,14 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       builder: (_) => ReaderScreen(book: random!)),
                 );
               },
-              child: const Text('Random Unread'),
+              child: Text(AppLocalizations.of(context)!.randomUnread),
             ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text('Library'),
+            child: Text(AppLocalizations.of(context)!.library),
           ),
         ],
       ),
@@ -274,10 +275,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
                   onSelected: (value) {
                     if (value == 'bookmarks') _openBookmarks();
                   },
-                  itemBuilder: (_) => const [
+                  itemBuilder: (_) => [
                     PopupMenuItem(
                       value: 'bookmarks',
-                      child: Text('Bookmarks'),
+                      child: Text(AppLocalizations.of(context)!.bookmarks),
                     ),
                   ],
                 ),
