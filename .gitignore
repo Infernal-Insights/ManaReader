@@ -45,6 +45,8 @@ app.*.map.json
 /android/app/release
 
 # Platform icons
+**/Assets.xcassets/*.png
+**/resources/*.ico
 android/app/src/main/res/mipmap-*
 ios/Runner/Assets.xcassets/AppIcon.appiconset/*
 ios/Runner/Assets.xcassets/LaunchImage.imageset/*
