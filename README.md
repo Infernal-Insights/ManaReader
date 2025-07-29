@@ -21,6 +21,8 @@ From the repository root run `flutter run` and select the desired target device.
 - **iOS / macOS**: project folders are included but contain only placeholders. Platform support will be added later.
 - **Linux / Windows**: similarly include placeholder folders for future desktop support.
 
+Icon images have been removed from version control. During development you can generate them with `flutter create --platforms=<platform>` or tools like `flutter_launcher_icons`.
+
 ## Platform Icons
 
 Platform icon files are not stored in this repository. Generate them locally with `flutter create .` or copy your own icons into the platform asset folders before building.
