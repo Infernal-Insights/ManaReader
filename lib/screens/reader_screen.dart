@@ -155,7 +155,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
     if (id == null) return;
 
     final db = DbHelper.instance;
-    final related = await db.fetchBooks(author: _book.author, unread: true);
+    final related = await db.fetchBooks(
+        author: _book.author, unread: true, orderBy: 'title');
     BookModel? next;
     for (final b in related) {
       if (b.id != id) {
@@ -163,7 +164,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
         break;
       }
     }
-    final unread = await db.fetchBooks(unread: true);
+    final unread = await db.fetchBooks(unread: true, orderBy: 'title');
     final others = unread.where((b) => b.id != id).toList();
     others.shuffle();
     final random = others.isNotEmpty ? others.first : null;

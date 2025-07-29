@@ -8,13 +8,14 @@ import '../import/importer.dart';
 import 'package:file_picker/file_picker.dart';
 import 'book_detail_screen.dart';
 
-
 /// Displays the list of imported books.
 class LibraryScreen extends StatefulWidget {
   final Future<List<BookModel>> Function({
     List<String>? tags,
     String? author,
     bool? unread,
+    String? query,
+    String? orderBy,
   })? fetchBooks;
 
   const LibraryScreen({super.key, this.fetchBooks});
@@ -31,6 +32,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
   String? _selectedAuthor;
   bool _showUnread = false;
   bool _isGrid = true;
+  String _searchQuery = '';
+  String _sortOrder = 'title';
 
   @override
   void initState() {
@@ -47,6 +50,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
         tags: _selectedTag != null ? [_selectedTag!] : null,
         author: _selectedAuthor,
         unread: _showUnread ? true : null,
+        query: _searchQuery.isNotEmpty ? _searchQuery : null,
+        orderBy: _sortOrder,
       );
     });
   }
@@ -59,7 +64,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
       _tags = tags;
       _authors = authors;
     });
-
   }
 
   final Map<String, Future<String?>> _thumbCache = {};
@@ -99,8 +103,33 @@ class _LibraryScreenState extends State<LibraryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Library'),
+        title: TextField(
+          decoration: const InputDecoration(
+            hintText: 'Search title',
+            border: InputBorder.none,
+          ),
+          onChanged: (v) {
+            _searchQuery = v;
+            _loadBooks();
+          },
+        ),
         actions: [
+          DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _sortOrder,
+              items: const [
+                DropdownMenuItem(value: 'title', child: Text('Title')),
+                DropdownMenuItem(value: 'author', child: Text('Author')),
+                DropdownMenuItem(value: 'recent', child: Text('Recently Read')),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => _sortOrder = value);
+                  _loadBooks();
+                }
+              },
+            ),
+          ),
           IconButton(
             icon: Icon(_isGrid ? Icons.view_list : Icons.grid_on),
             onPressed: () => setState(() => _isGrid = !_isGrid),

@@ -84,14 +84,14 @@ class DbHelper {
   Future<int> updateBook(BookModel book) async {
     if (book.id == null) throw ArgumentError('Book id cannot be null');
     final db = await database;
-    return db.update('books', book.toMap(), where: 'id = ?', whereArgs: [book.id]);
+    return db
+        .update('books', book.toMap(), where: 'id = ?', whereArgs: [book.id]);
   }
 
   Future<int> deleteBook(int id) async {
     final db = await database;
     return db.delete('books', where: 'id = ?', whereArgs: [id]);
   }
-
 
   /// Imports a book from the given path and resolves metadata using [service].
   Future<int> importBook(String path, MetadataService service) async {
@@ -111,6 +111,8 @@ class DbHelper {
     List<String>? tags,
     String? author,
     bool? unread,
+    String? query,
+    String? orderBy,
   }) async {
     final db = await database;
     final where = <String>[];
@@ -128,10 +130,30 @@ class DbHelper {
     if (unread != null) {
       where.add(unread ? 'last_page = 0' : 'last_page > 0');
     }
+    if (query != null && query.isNotEmpty) {
+      where.add('title LIKE ?');
+      args.add('%$query%');
+    }
+    String? orderClause;
+    if (orderBy != null) {
+      switch (orderBy) {
+        case 'title':
+          orderClause = 'title COLLATE NOCASE ASC';
+          break;
+        case 'author':
+          orderClause = 'author COLLATE NOCASE ASC';
+          break;
+        case 'recent':
+          orderClause =
+              '(SELECT MAX(timestamp) FROM history WHERE book_id = books.id) DESC';
+          break;
+      }
+    }
     final maps = await db.query(
       'books',
       where: where.isEmpty ? null : where.join(' AND '),
       whereArgs: args,
+      orderBy: orderClause,
     );
     return maps.map((e) => BookModel.fromMap(e)).toList();
   }
@@ -156,7 +178,6 @@ class DbHelper {
           .where((element) => element.isNotEmpty));
     }
     return set.toList();
-
   }
 
   Future<void> updateProgress(int id, int page) async {
