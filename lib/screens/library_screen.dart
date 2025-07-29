@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../database/db_helper.dart';
 import '../models/book_model.dart';
 
@@ -126,8 +127,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: TextField(
-          decoration: const InputDecoration(
-            hintText: 'Search title',
+          decoration: InputDecoration(
+            hintText: AppLocalizations.of(context)!.searchTitle,
             border: InputBorder.none,
           ),
           onChanged: (v) {
@@ -139,10 +140,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
           DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: _sortOrder,
-              items: const [
-                DropdownMenuItem(value: 'title', child: Text('Title')),
-                DropdownMenuItem(value: 'author', child: Text('Author')),
-                DropdownMenuItem(value: 'recent', child: Text('Recently Read')),
+              items: [
+                DropdownMenuItem(
+                    value: 'title',
+                    child: Text(AppLocalizations.of(context)!.sortTitle)),
+                DropdownMenuItem(
+                    value: 'author',
+                    child: Text(AppLocalizations.of(context)!.sortAuthor)),
+                DropdownMenuItem(
+                    value: 'recent',
+                    child: Text(AppLocalizations.of(context)!.sortRecent)),
               ],
               onChanged: (value) {
                 if (value != null) {
@@ -170,7 +177,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           }
           final books = snapshot.data!;
           if (books.isEmpty) {
-            return const Center(child: Text('No books imported'));
+            return Center(child: Text(AppLocalizations.of(context)!.noBooks));
           }
           Widget listWidget;
           if (_isGrid) {
@@ -262,8 +269,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         onSelected: (value) {
                           if (value == 'edit') _openDetails(book);
                         },
-                        itemBuilder: (_) => const [
-                          PopupMenuItem(value: 'edit', child: Text('Edit')),
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                              value: 'edit',
+                              child: Text(AppLocalizations.of(context)!.edit)),
                         ],
                       ),
                     ),
@@ -304,8 +313,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         onSelected: (value) {
                           if (value == 'edit') _openDetails(book);
                         },
-                        itemBuilder: (_) => const [
-                          PopupMenuItem(value: 'edit', child: Text('Edit')),
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                              value: 'edit',
+                              child: Text(AppLocalizations.of(context)!.edit)),
                         ],
                       ),
                     ],
@@ -329,12 +340,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     children: [
                       if (_tags.isNotEmpty)
                         DropdownButton<String?>(
-                          hint: const Text('Tag'),
+                          hint: Text(AppLocalizations.of(context)!.tag),
                           value: _selectedTag,
                           items: [
-                            const DropdownMenuItem<String?>(
+                            DropdownMenuItem<String?>(
                               value: null,
-                              child: Text('All'),
+                              child: Text(AppLocalizations.of(context)!.all),
                             ),
                             ..._tags.map(
                               (e) => DropdownMenuItem<String?>(
@@ -351,12 +362,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       const SizedBox(width: 8),
                       if (_authors.isNotEmpty)
                         DropdownButton<String?>(
-                          hint: const Text('Author'),
+                          hint: Text(AppLocalizations.of(context)!.author),
                           value: _selectedAuthor,
                           items: [
-                            const DropdownMenuItem<String?>(
+                            DropdownMenuItem<String?>(
                               value: null,
-                              child: Text('All'),
+                              child: Text(AppLocalizations.of(context)!.all),
                             ),
                             ..._authors.map(
                               (e) => DropdownMenuItem<String?>(
@@ -382,7 +393,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                               _loadBooks();
                             },
                           ),
-                          const Text('Unread'),
+                          Text(AppLocalizations.of(context)!.unread),
                         ],
                       ),
                     ],
@@ -404,16 +415,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete Book'),
-        content: Text('Delete "${book.title}"?'),
+        title: Text(AppLocalizations.of(context)!.deleteBook),
+        content: Text(
+            AppLocalizations.of(context)!.deleteConfirm(title: book.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(AppLocalizations.of(context)!.delete),
           ),
         ],
       ),
@@ -452,7 +464,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Import failed: $e')));
+        ).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.importFailed(error: e.toString()),
+            ),
+          ),
+        );
       }
     }
   }

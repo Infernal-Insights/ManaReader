@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'dart:convert';
@@ -23,7 +24,11 @@ void main() {
       language: 'en',
       pages: [imgPath],
     );
-    await tester.pumpWidget(MaterialApp(home: ReaderScreen(book: book)));
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: ReaderScreen(book: book),
+    ));
     expect(find.text('Read Me'), findsOneWidget);
     expect(find.byType(PageView), findsOneWidget);
   });
@@ -33,7 +38,11 @@ void main() {
     final imgPath = p.join(dir.path, 'a.png');
     File(imgPath).writeAsBytesSync(base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII='));
     final book = BookModel(title: 'Read', path: dir.path, language: 'en', pages: [imgPath]);
-    await tester.pumpWidget(MaterialApp(home: ReaderScreen(book: book)));
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: ReaderScreen(book: book),
+    ));
     final btn = find.byIcon(Icons.format_textdirection_l_to_r);
     expect(btn, findsOneWidget);
     await tester.tap(btn);
@@ -48,7 +57,11 @@ void main() {
     File(imgPath).writeAsBytesSync(base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII='));
     File(img2).writeAsBytesSync(base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII='));
     final book = BookModel(title: 'Read', path: dir.path, language: 'en', pages: [imgPath, img2]);
-    await tester.pumpWidget(MaterialApp(home: ReaderScreen(book: book)));
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: ReaderScreen(book: book),
+    ));
     final btn = find.byIcon(Icons.filter_2);
     expect(btn, findsOneWidget);
     await tester.tap(btn);
@@ -62,7 +75,11 @@ void main() {
     File(imgPath).writeAsBytesSync(base64Decode(
         'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII='));
     final book = BookModel(title: 'Read', path: dir.path, language: 'en', pages: [imgPath]);
-    await tester.pumpWidget(MaterialApp(home: ReaderScreen(book: book)));
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: ReaderScreen(book: book),
+    ));
     expect(find.byIcon(Icons.bookmark_border), findsOneWidget);
     expect(find.byType(Slider), findsOneWidget);
   });
@@ -73,7 +90,11 @@ void main() {
     File(imgPath).writeAsBytesSync(base64Decode(
         'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII='));
     final book = BookModel(title: 'Read', path: dir.path, language: 'en', pages: [imgPath]);
-    await tester.pumpWidget(MaterialApp(home: ReaderScreen(book: book)));
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: ReaderScreen(book: book),
+    ));
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();

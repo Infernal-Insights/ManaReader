@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'history_screen.dart';
 import 'library_screen.dart';
@@ -10,7 +11,7 @@ class MainMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Mana Reader')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.appTitle)),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -20,7 +21,7 @@ class MainMenu extends StatelessWidget {
                 context,
                 MaterialPageRoute(builder: (_) => const LibraryScreen()),
               ),
-              child: const Text('Library'),
+              child: Text(AppLocalizations.of(context)!.library),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -28,7 +29,7 @@ class MainMenu extends StatelessWidget {
                 context,
                 MaterialPageRoute(builder: (_) => const HistoryScreen()),
               ),
-              child: const Text('History'),
+              child: Text(AppLocalizations.of(context)!.history),
             ),
           ],
         ),
