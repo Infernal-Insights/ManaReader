@@ -48,3 +48,9 @@ flutter test
 
 Make sure you have the Flutter SDK installed and dependencies fetched with `flutter pub get`.
 
+## Continuous Integration
+
+Every pull request runs the workflow in `.github/workflows/ci.yml` which sets up
+Flutter, runs `flutter analyze` and executes the test suite. This helps ensure
+that all contributed code is properly formatted and tested before merging.
+

@@ -6,6 +6,8 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:mana_reader/database/db_helper.dart';
 import 'package:mana_reader/models/book_model.dart';
+import 'package:mana_reader/metadata/metadata_service.dart';
+import 'package:mana_reader/metadata/metadata_provider.dart';
 
 class _FakePathProviderPlatform extends PathProviderPlatform {
   final Directory tempDir =
@@ -14,6 +16,13 @@ class _FakePathProviderPlatform extends PathProviderPlatform {
   @override
   Future<String?> getApplicationDocumentsPath() async {
     return tempDir.path;
+  }
+}
+
+class _FakeMetadataService extends MetadataService {
+  @override
+  Future<Metadata?> resolve(String query) async {
+    return Metadata(title: 'Resolved', language: 'jp', tags: ['tag']);
   }
 }
 
@@ -87,6 +96,54 @@ void main() {
       await dbHelper.deleteBook(id);
       final books = await dbHelper.fetchBooks();
       expect(books, isEmpty);
+    });
+
+    test('fetchBooks with filters', () async {
+      await dbHelper.insertBook(BookModel(
+          title: 'A', path: '/tmp/a.cbz', language: 'en', author: 'Alice', tags: ['x']));
+      await dbHelper.insertBook(BookModel(
+          title: 'B', path: '/tmp/b.cbz', language: 'en', author: 'Bob', tags: ['y'], lastPage: 2));
+
+      final tagFiltered = await dbHelper.fetchBooks(tags: ['x']);
+      expect(tagFiltered.map((b) => b.title), ['A']);
+
+      final authorFiltered = await dbHelper.fetchBooks(author: 'Bob');
+      expect(authorFiltered.map((b) => b.title), ['B']);
+
+      final unread = await dbHelper.fetchBooks(unread: true);
+      expect(unread.map((b) => b.title), ['A']);
+    });
+
+    test('fetchAllAuthors and fetchAllTags', () async {
+      await dbHelper.insertBook(BookModel(
+          title: 'A', path: '/tmp/a.cbz', language: 'en', author: 'Me', tags: ['x','y']));
+      await dbHelper.insertBook(BookModel(
+          title: 'B', path: '/tmp/b.cbz', language: 'en', author: 'You', tags: ['y']));
+
+      final authors = await dbHelper.fetchAllAuthors();
+      expect(authors.toSet(), {'Me', 'You'});
+
+      final tags = await dbHelper.fetchAllTags();
+      expect(tags.toSet(), {'x', 'y'});
+    });
+
+    test('importBook uses metadata', () async {
+      final service = _FakeMetadataService();
+      final id = await dbHelper.importBook('/tmp/book.cbz', service);
+      final book = await dbHelper.fetchBook(id);
+      expect(book, isNotNull);
+      expect(book!.title, equals('Resolved'));
+      expect(book.language, equals('jp'));
+      expect(book.tags, ['tag']);
+    });
+
+    test('history insertion and fetch', () async {
+      final id = await dbHelper
+          .insertBook(BookModel(title: 'Hist', path: '/tmp/h.cbz', language: 'en'));
+      await dbHelper.updateProgress(id, 3);
+      final history = await dbHelper.fetchHistory(id);
+      expect(history, isNotEmpty);
+      expect(history.first['page'], 3);
     });
 
   });
