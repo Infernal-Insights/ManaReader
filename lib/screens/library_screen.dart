@@ -53,6 +53,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   Future<void> _initFilters() async {
     final tags = await DbHelper.instance.fetchAllTags();
     final authors = await DbHelper.instance.fetchAllAuthors();
+    if (!mounted) return;
     setState(() {
       _tags = tags;
       _authors = authors;
