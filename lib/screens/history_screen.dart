@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../database/db_helper.dart';
 import '../models/book_model.dart';
 import 'reader_screen.dart';
-import 'dart:io';
 
 /// Lists books sorted by recent reading history.
 class HistoryScreen extends StatelessWidget {
@@ -20,32 +19,10 @@ class HistoryScreen extends StatelessWidget {
   }
 
   Future<double> _loadProgress(BookModel book) async {
-    int count = book.pages.length;
-    if (count == 0) {
-      final dir = Directory(book.path);
-      if (!await dir.exists()) return 0;
-      try {
-        final files = await dir
-            .list(recursive: true)
-            .where((e) => e is File && _isImage(e.path))
-            .toList();
-        files.sort();
-        count = files.length;
-      } catch (_) {
-        return 0;
-      }
-    }
+    final count = book.pages.length;
     if (count == 0) return 0;
     final progress = book.lastPage / count;
     return progress.clamp(0, 1).toDouble();
-  }
-
-  bool _isImage(String path) {
-    final lower = path.toLowerCase();
-    return lower.endsWith('.jpg') ||
-        lower.endsWith('.jpeg') ||
-        lower.endsWith('.png') ||
-        lower.endsWith('.gif');
   }
 
   @override
@@ -68,14 +45,20 @@ class HistoryScreen extends StatelessWidget {
               final book = books[index];
               return ListTile(
                 title: Text(book.title),
-                subtitle: FutureBuilder<double>(
+                trailing: FutureBuilder<double>(
                   future: _progressFor(book),
                   builder: (context, snap) {
                     final value = snap.data ?? 0.0;
-                    return LinearProgressIndicator(
-                      value: value,
-                      minHeight: 4,
-                      backgroundColor: Colors.black26,
+                    final percent = (value * 100).round();
+                    return Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      color: Colors.black54,
+                      child: Text(
+                        '$percent%',
+                        style:
+                            const TextStyle(fontSize: 12, color: Colors.white),
+                      ),
                     );
                   },
                 ),
