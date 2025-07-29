@@ -107,21 +107,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Future<double> _loadProgress(BookModel book) async {
-    int count = book.pages.length;
-    if (count == 0) {
-      final dir = Directory(book.path);
-      if (!await dir.exists()) return 0;
-      try {
-        final files = await dir
-            .list(recursive: true)
-            .where((e) => e is File && _isImage(e.path))
-            .toList();
-        files.sort();
-        count = files.length;
-      } catch (_) {
-        return 0;
-      }
-    }
+    final count = book.pages.length;
     if (count == 0) return 0;
     final progress = book.lastPage / count;
     return progress.clamp(0, 1).toDouble();
@@ -246,6 +232,27 @@ class _LibraryScreenState extends State<LibraryScreen> {
                             },
                           ),
                         ),
+                        Positioned(
+                          top: 4,
+                          right: 4,
+                          child: FutureBuilder<double>(
+                            future: _progressFor(book),
+                            builder: (context, snap) {
+                              final value = snap.data ?? 0.0;
+                              final percent = (value * 100).round();
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 4, vertical: 2),
+                                color: Colors.black54,
+                                child: Text(
+                                  '$percent%',
+                                  style: const TextStyle(
+                                      fontSize: 12, color: Colors.white),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                       ],
                     ),
                     footer: GridTileBar(
@@ -272,21 +279,34 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 final book = books[index];
                 return ListTile(
                   title: Text(book.title),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  subtitle: Text(book.author),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(book.author),
-                      const SizedBox(height: 4),
                       FutureBuilder<double>(
                         future: _progressFor(book),
                         builder: (context, snap) {
                           final value = snap.data ?? 0.0;
-                          return LinearProgressIndicator(
-                            value: value,
-                            minHeight: 4,
-                            backgroundColor: Colors.black26,
+                          final percent = (value * 100).round();
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 4, vertical: 2),
+                            color: Colors.black54,
+                            child: Text(
+                              '$percent%',
+                              style: const TextStyle(
+                                  fontSize: 12, color: Colors.white),
+                            ),
                           );
                         },
+                      ),
+                      PopupMenuButton<String>(
+                        onSelected: (value) {
+                          if (value == 'edit') _openDetails(book);
+                        },
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(value: 'edit', child: Text('Edit')),
+                        ],
                       ),
                     ],
                   ),
@@ -295,14 +315,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     MaterialPageRoute(builder: (_) => ReaderScreen(book: book)),
                   ),
                   onLongPress: () => _confirmDelete(book),
-                  trailing: PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'edit') _openDetails(book);
-                    },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'edit', child: Text('Edit')),
-                    ],
-                  ),
                 );
               },
             );
