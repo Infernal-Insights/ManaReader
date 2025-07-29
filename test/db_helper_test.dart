@@ -146,5 +146,16 @@ void main() {
       expect(history.first['page'], 3);
     });
 
+    test('bookmark add and remove', () async {
+      final id = await dbHelper
+          .insertBook(BookModel(title: 'Bm', path: '/tmp/h.cbz', language: 'en'));
+      await dbHelper.addBookmark(id, 2);
+      var bookmarks = await dbHelper.fetchBookmarks(id);
+      expect(bookmarks, contains(2));
+      await dbHelper.removeBookmark(id, 2);
+      bookmarks = await dbHelper.fetchBookmarks(id);
+      expect(bookmarks, isEmpty);
+    });
+
   });
 }

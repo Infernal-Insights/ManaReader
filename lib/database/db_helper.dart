@@ -26,7 +26,7 @@ class DbHelper {
     final path = p.join(documentsDir.path, 'mana_reader.db');
     return openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE books(
@@ -47,6 +47,24 @@ class DbHelper {
             timestamp INTEGER
           )
         ''');
+        await db.execute('''
+          CREATE TABLE bookmarks(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            book_id INTEGER,
+            page INTEGER
+          )
+        ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('''
+            CREATE TABLE bookmarks(
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              book_id INTEGER,
+              page INTEGER
+            )
+          ''');
+        }
       },
     );
   }
@@ -164,5 +182,29 @@ class DbHelper {
   Future<List<Map<String, dynamic>>> fetchHistory(int bookId) async {
     final db = await database;
     return db.query('history', where: 'book_id = ?', whereArgs: [bookId]);
+  }
+
+  Future<void> addBookmark(int bookId, int page) async {
+    final db = await database;
+    await db.insert('bookmarks', {
+      'book_id': bookId,
+      'page': page,
+    });
+  }
+
+  Future<void> removeBookmark(int bookId, int page) async {
+    final db = await database;
+    await db.delete(
+      'bookmarks',
+      where: 'book_id = ? AND page = ?',
+      whereArgs: [bookId, page],
+    );
+  }
+
+  Future<List<int>> fetchBookmarks(int bookId) async {
+    final db = await database;
+    final maps =
+        await db.query('bookmarks', where: 'book_id = ?', whereArgs: [bookId]);
+    return maps.map((e) => e['page'] as int).toList();
   }
 }
