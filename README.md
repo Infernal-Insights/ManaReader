@@ -13,6 +13,15 @@ Mana Reader aims to be a lightweight, cross‑platform manga and doujinshi reade
 - **Dart**: >=2.17.0 <3.0.0
 - **Flutter**: tested with Flutter 3; newer versions in the same major series should work.
 
+## Development Setup
+
+1. [Install Flutter](https://docs.flutter.dev/get-started/install) and verify the
+   installation with `flutter doctor`.
+2. From the repository root run `flutter pub get` to fetch project
+   dependencies.
+3. After dependencies are installed you can build or test the project using
+   `flutter build` or `flutter test`.
+
 ## Running
 
 From the repository root run `flutter run` and select the desired target device.
