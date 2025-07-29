@@ -62,4 +62,16 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ListView), findsOneWidget);
   });
+
+  testWidgets('shows delete dialog on long press', (tester) async {
+    final books = [BookModel(id: 1, title: 'X', path: '/tmp/x.cbz', language: 'en')];
+    await tester.pumpWidget(MaterialApp(
+      home: LibraryScreen(fetchBooks: ({tags, author, unread}) async => books),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.text('X'));
+    await tester.pumpAndSettle();
+    expect(find.text('Delete Book'), findsOneWidget);
+  });
 }
