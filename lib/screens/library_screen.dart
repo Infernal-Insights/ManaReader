@@ -16,7 +16,8 @@ class LibraryScreen extends StatefulWidget {
     bool? unread,
     String? query,
     String? orderBy,
-  })? fetchBooks;
+  })?
+  fetchBooks;
 
   const LibraryScreen({super.key, this.fetchBooks});
 
@@ -162,9 +163,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 return GestureDetector(
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => ReaderScreen(book: book),
-                    ),
+                    MaterialPageRoute(builder: (_) => ReaderScreen(book: book)),
                   ),
                   onLongPress: () => _confirmDelete(book),
                   child: GridTile(
@@ -180,10 +179,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         }
                         final path = snap.data;
                         if (path != null) {
-                          return Image.file(
-                            File(path),
-                            fit: BoxFit.cover,
-                          );
+                          return Image.file(File(path), fit: BoxFit.cover);
                         }
                         return Container(
                           color: Colors.grey.shade800,
@@ -194,10 +190,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     ),
                     footer: GridTileBar(
                       backgroundColor: Colors.black54,
-                      title: Text(
-                        book.title,
-                        textAlign: TextAlign.center,
-                      ),
+                      title: Text(book.title, textAlign: TextAlign.center),
                       trailing: PopupMenuButton<String>(
                         onSelected: (value) {
                           if (value == 'edit') _openDetails(book);
@@ -222,9 +215,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   subtitle: Text(book.author),
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => ReaderScreen(book: book),
-                    ),
+                    MaterialPageRoute(builder: (_) => ReaderScreen(book: book)),
                   ),
                   onLongPress: () => _confirmDelete(book),
                   trailing: PopupMenuButton<String>(
@@ -253,10 +244,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           value: _selectedTag,
                           items: [
                             const DropdownMenuItem<String?>(
-                                value: null, child: Text('All')),
+                              value: null,
+                              child: Text('All'),
+                            ),
                             ..._tags.map(
                               (e) => DropdownMenuItem<String?>(
-                                  value: e, child: Text(e)),
+                                value: e,
+                                child: Text(e),
+                              ),
                             ),
                           ],
                           onChanged: (value) {
@@ -271,10 +266,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           value: _selectedAuthor,
                           items: [
                             const DropdownMenuItem<String?>(
-                                value: null, child: Text('All')),
+                              value: null,
+                              child: Text('All'),
+                            ),
                             ..._authors.map(
                               (e) => DropdownMenuItem<String?>(
-                                  value: e, child: Text(e)),
+                                value: e,
+                                child: Text(e),
+                              ),
                             ),
                           ],
                           onChanged: (value) {
@@ -294,9 +293,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                               _loadBooks();
                             },
                           ),
-                          const Text('Unread')
+                          const Text('Unread'),
                         ],
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -333,6 +332,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
     if (confirm == true) {
       await DbHelper.instance.deleteBook(book.id!);
+      try {
+        final dir = Directory(book.path);
+        if (await dir.exists()) {
+          await dir.delete(recursive: true);
+        }
+      } catch (_) {}
       if (mounted) _loadBooks();
     }
   }
@@ -356,9 +361,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
       _loadBooks();
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Import failed: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Import failed: $e')));
       }
     }
   }
