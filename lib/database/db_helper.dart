@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -84,13 +86,41 @@ class DbHelper {
   Future<int> updateBook(BookModel book) async {
     if (book.id == null) throw ArgumentError('Book id cannot be null');
     final db = await database;
-    return db
-        .update('books', book.toMap(), where: 'id = ?', whereArgs: [book.id]);
+    return db.update(
+      'books',
+      book.toMap(),
+      where: 'id = ?',
+      whereArgs: [book.id],
+    );
   }
 
   Future<int> deleteBook(int id) async {
     final db = await database;
-    return db.delete('books', where: 'id = ?', whereArgs: [id]);
+    String? path;
+    try {
+      final result = await db.query(
+        'books',
+        columns: ['path'],
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      if (result.isNotEmpty) {
+        path = result.first['path'] as String?;
+      }
+    } catch (_) {}
+
+    final rows = await db.delete('books', where: 'id = ?', whereArgs: [id]);
+
+    if (path != null) {
+      final dir = Directory(path);
+      try {
+        if (await dir.exists()) {
+          await dir.delete(recursive: true);
+        }
+      } catch (_) {}
+    }
+
+    return rows;
   }
 
   /// Imports a book from the given path and resolves metadata using [service].
@@ -172,10 +202,12 @@ class DbHelper {
     final set = <String>{};
     for (final map in maps) {
       final tagStr = map['tags'] as String? ?? '';
-      set.addAll(tagStr
-          .split(',')
-          .map((e) => e.trim())
-          .where((element) => element.isNotEmpty));
+      set.addAll(
+        tagStr
+            .split(',')
+            .map((e) => e.trim())
+            .where((element) => element.isNotEmpty),
+      );
     }
     return set.toList();
   }
@@ -207,10 +239,7 @@ class DbHelper {
 
   Future<void> addBookmark(int bookId, int page) async {
     final db = await database;
-    await db.insert('bookmarks', {
-      'book_id': bookId,
-      'page': page,
-    });
+    await db.insert('bookmarks', {'book_id': bookId, 'page': page});
   }
 
   Future<void> removeBookmark(int bookId, int page) async {
@@ -224,8 +253,11 @@ class DbHelper {
 
   Future<List<int>> fetchBookmarks(int bookId) async {
     final db = await database;
-    final maps =
-        await db.query('bookmarks', where: 'book_id = ?', whereArgs: [bookId]);
+    final maps = await db.query(
+      'bookmarks',
+      where: 'book_id = ?',
+      whereArgs: [bookId],
+    );
     return maps.map((e) => e['page'] as int).toList();
   }
 }
