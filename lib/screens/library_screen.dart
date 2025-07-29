@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import '../database/db_helper.dart';
 import '../models/book_model.dart';
@@ -58,6 +60,39 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   }
 
+  final Map<String, Future<String?>> _thumbCache = {};
+
+  Future<String?> _thumbnailFor(BookModel book) {
+    return _thumbCache[book.path] ??= _loadThumbnail(book);
+  }
+
+  Future<String?> _loadThumbnail(BookModel book) async {
+    if (book.pages.isNotEmpty) {
+      return book.pages.first;
+    }
+    final dir = Directory(book.path);
+    if (!await dir.exists()) return null;
+    try {
+      final files = await dir
+          .list(recursive: true)
+          .where((e) => e is File && _isImage(e.path))
+          .map((e) => e.path)
+          .toList();
+      files.sort();
+      return files.isNotEmpty ? files.first : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool _isImage(String path) {
+    final lower = path.toLowerCase();
+    return lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.png') ||
+        lower.endsWith('.gif');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -100,12 +135,37 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       builder: (_) => ReaderScreen(book: book),
                     ),
                   ),
-                  child: Container(
-                    color: Colors.grey.shade800,
-                    alignment: Alignment.center,
-                    child: Text(
-                      book.title,
-                      textAlign: TextAlign.center,
+                  child: GridTile(
+                    child: FutureBuilder<String?>(
+                      future: _thumbnailFor(book),
+                      builder: (context, snap) {
+                        if (snap.connectionState != ConnectionState.done) {
+                          return Container(
+                            color: Colors.grey.shade800,
+                            alignment: Alignment.center,
+                            child: const CircularProgressIndicator(),
+                          );
+                        }
+                        final path = snap.data;
+                        if (path != null) {
+                          return Image.file(
+                            File(path),
+                            fit: BoxFit.cover,
+                          );
+                        }
+                        return Container(
+                          color: Colors.grey.shade800,
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.book, size: 48),
+                        );
+                      },
+                    ),
+                    footer: GridTileBar(
+                      backgroundColor: Colors.black54,
+                      title: Text(
+                        book.title,
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
                 );
