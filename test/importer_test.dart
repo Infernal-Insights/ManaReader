@@ -9,6 +9,120 @@ import 'package:archive/archive.dart';
 import 'package:mana_reader/importers/importer_factory.dart';
 import 'package:mana_reader/importers/folder_importer.dart';
 import 'package:mana_reader/importers/zip_importer.dart';
+import 'package:mana_reader/importers/rar_importer.dart';
+import 'package:mana_reader/importers/seven_zip_importer.dart';
+import 'package:mana_reader/importers/pdf_importer.dart';
+import 'package:pdf_render/pdf_render.dart';
+import 'dart:typed_data';
+import 'dart:ffi';
+import 'dart:ui' as ui;
+import 'dart:async';
+
+class _FakePdfRenderPlatform extends PdfRenderPlatform {
+  @override
+  Future<PdfDocument> openFile(String filePath) async => _FakePdfDocument();
+
+  @override
+  Future<PdfDocument> openAsset(String name) async => _FakePdfDocument();
+
+  @override
+  Future<PdfDocument> openData(Uint8List data) async => _FakePdfDocument();
+
+  @override
+  Future<PdfPageImageTexture> createTexture(
+          {required FutureOr<PdfDocument> pdfDocument, required int pageNumber}) =>
+      throw UnimplementedError();
+}
+
+class _FakePdfDocument extends PdfDocument {
+  _FakePdfDocument()
+      : super(
+            sourceName: 'fake.pdf',
+            pageCount: 1,
+            verMajor: 1,
+            verMinor: 7,
+            isEncrypted: false,
+            allowsCopying: true,
+            allowsPrinting: true);
+
+  @override
+  Future<void> dispose() async {}
+
+  @override
+  Future<PdfPage> getPage(int pageNumber) async =>
+      _FakePdfPage(this, pageNumber);
+
+  @override
+  bool operator ==(dynamic other) => identical(this, other);
+
+  @override
+  int get hashCode => super.hashCode;
+}
+
+class _FakePdfPage extends PdfPage {
+  _FakePdfPage(PdfDocument doc, int num)
+      : super(document: doc, pageNumber: num, width: 1, height: 1);
+
+  @override
+  Future<PdfPageImage> render({
+    int x = 0,
+    int y = 0,
+    int? width,
+    int? height,
+    double? fullWidth,
+    double? fullHeight,
+    bool backgroundFill = true,
+    bool allowAntialiasingIOS = false,
+  }) async {
+    return _FakePdfPageImage(pageNumber);
+  }
+
+  Future<void> close() async {}
+}
+
+class _FakePdfPageImage extends PdfPageImage {
+  _FakePdfPageImage(int page)
+      : _pixels = Uint8List.fromList(const [255, 0, 0, 255]),
+        super(
+            pageNumber: page,
+            x: 0,
+            y: 0,
+            width: 1,
+            height: 1,
+            fullWidth: 1,
+            fullHeight: 1,
+            pageWidth: 1,
+            pageHeight: 1);
+
+  final Uint8List _pixels;
+  ui.Image? _image;
+
+  @override
+  Uint8List get pixels => _pixels;
+
+  @override
+  Pointer<Uint8>? get buffer => null;
+
+  @override
+  void dispose() {}
+
+  @override
+  ui.Image? get imageIfAvailable => _image;
+
+  @override
+  Future<ui.Image> createImageIfNotAvailable() async {
+    if (_image != null) return _image!;
+    final comp = Completer<ui.Image>();
+    ui.decodeImageFromPixels(
+        _pixels, 1, 1, ui.PixelFormat.rgba8888, (img) => comp.complete(img));
+    _image = await comp.future;
+    return _image!;
+  }
+
+  @override
+  Future<ui.Image> createImageDetached() async =>
+      await createImageIfNotAvailable();
+}
 
 
 class _FakePathProviderPlatform extends PathProviderPlatform {
@@ -53,6 +167,81 @@ void main() {
 
       final importer = ZipImporter();
       final book = await importer.import(zipPath);
+      expect(book.pages.length, 1);
+      expect(File(book.pages.first).existsSync(), isTrue);
+    });
+
+    test('RarImporter extracts images', () async {
+      const channel = MethodChannel('com.lkrjangid.rar');
+      channel.setMockMethodCallHandler((call) async {
+        if (call.method == 'extractRarFile') {
+          final bytes = File(call.arguments['rarFilePath'] as String).readAsBytesSync();
+          final archive = ZipDecoder().decodeBytes(bytes);
+          final dest = call.arguments['destinationPath'] as String;
+          for (final f in archive) {
+            if (f.isFile) {
+              final out = File(p.join(dest, f.name))..createSync(recursive: true);
+              out.writeAsBytesSync(f.content as List<int>);
+            }
+          }
+          return {'success': true, 'message': 'ok'};
+        }
+        return null;
+      });
+
+      final tmp = Directory.systemTemp.createTempSync();
+      final img = base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=');
+      final archive = Archive()
+        ..addFile(ArchiveFile('c.png', img.length, img));
+      final bytes = ZipEncoder().encode(archive)!;
+      final rarPath = p.join(tmp.path, 'c.cbr');
+      File(rarPath).writeAsBytesSync(bytes);
+
+      final importer = RarImporter();
+      final book = await importer.import(rarPath);
+      expect(book.pages.length, 1);
+      expect(File(book.pages.first).existsSync(), isTrue);
+    });
+
+    test('SevenZipImporter extracts images', () async {
+      final sevenScript = File('/usr/local/bin/7z');
+      if (!sevenScript.existsSync()) {
+        sevenScript
+          ..writeAsStringSync('''#!/usr/bin/env python3
+import sys, zipfile, os
+args=sys.argv[1:]
+archive=args[1]
+dest=args[2]
+if dest.startswith("-o"):
+    dest=dest[2:]
+zipfile.ZipFile(archive).extractall(dest)
+''')
+          ..chmodSync(0o755);
+      }
+
+      final tmp = Directory.systemTemp.createTempSync();
+      final img = base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=');
+      final archive = Archive()
+        ..addFile(ArchiveFile('d.png', img.length, img));
+      final bytes = ZipEncoder().encode(archive)!;
+      final sevenPath = p.join(tmp.path, 'd.cb7');
+      File(sevenPath).writeAsBytesSync(bytes);
+
+      final importer = SevenZipImporter();
+      final book = await importer.import(sevenPath);
+      expect(book.pages.length, 1);
+      expect(File(book.pages.first).existsSync(), isTrue);
+    });
+
+    test('PdfImporter renders pages', () async {
+      PdfRenderPlatform.instance = _FakePdfRenderPlatform();
+      final tmp = Directory.systemTemp.createTempSync();
+      final pdfData = base64Decode('JVBERi0xLjEKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBvYmo8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iagozIDAgb2JqPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9NZWRpYUJveFswIDAgNjEyIDc5Ml0+PmVuZG9iagp0cmFpbGVyPDwvUm9vdCAxIDAgUi9TaXplIDQ+PgolJUVPRg==');
+      final pdfPath = p.join(tmp.path, 'a.pdf');
+      File(pdfPath).writeAsBytesSync(pdfData);
+
+      final importer = PdfImporter();
+      final book = await importer.import(pdfPath);
       expect(book.pages.length, 1);
       expect(File(book.pages.first).existsSync(), isTrue);
     });
