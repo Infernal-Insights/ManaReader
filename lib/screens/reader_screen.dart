@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../database/db_helper.dart';
 import '../models/book_model.dart';
+import 'bookmarks_screen.dart';
 
 /// Displays the pages of a book using [PageView] and remembers the last page
 /// read. Supports left-to-right or right-to-left reading direction, pinch zoom
@@ -212,6 +213,22 @@ class _ReaderScreenState extends State<ReaderScreen> {
     );
   }
 
+  Future<void> _openBookmarks() async {
+    final page = await Navigator.push<int>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BookmarksScreen(book: _book),
+      ),
+    );
+    if (page != null && mounted) {
+      final index = _doublePage ? (page / 2).floor() : page;
+      _controller.jumpToPage(index);
+      setState(() {
+        _currentPage = index;
+      });
+    }
+  }
+
   Widget _buildPage(int index) {
     final pages = _pagesForIndex(index);
     if (pages.length == 1) {
@@ -252,6 +269,17 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     _controller = PageController(initialPage: newPage);
                     _currentPage = newPage;
                   }),
+                ),
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'bookmarks') _openBookmarks();
+                  },
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(
+                      value: 'bookmarks',
+                      child: Text('Bookmarks'),
+                    ),
+                  ],
                 ),
               ],
             )

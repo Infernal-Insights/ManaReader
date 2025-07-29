@@ -66,4 +66,20 @@ void main() {
     expect(find.byIcon(Icons.bookmark_border), findsOneWidget);
     expect(find.byType(Slider), findsOneWidget);
   });
+
+  testWidgets('opens bookmarks screen from menu', (tester) async {
+    final dir = Directory.systemTemp.createTempSync();
+    final imgPath = p.join(dir.path, 'a.png');
+    File(imgPath).writeAsBytesSync(base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII='));
+    final book = BookModel(title: 'Read', path: dir.path, language: 'en', pages: [imgPath]);
+    await tester.pumpWidget(MaterialApp(home: ReaderScreen(book: book)));
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Bookmarks'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No bookmarks'), findsOneWidget);
+  });
 }
