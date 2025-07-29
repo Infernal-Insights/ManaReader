@@ -23,7 +23,7 @@ From the repository root run `flutter run` and select the desired target device.
 
 ## Platform Icons
 
-Platform icon files are not stored in this repository. Run `flutter create .` or use your own script to generate the default icons before building for a platform.
+Platform icon files are not stored in this repository. Generate them locally with `flutter create .` or copy your own icons into the platform asset folders before building.
 
 ## Roadmap
 
