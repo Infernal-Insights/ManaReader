@@ -6,13 +6,19 @@ import 'package:path_provider/path_provider.dart';
 import '../models/book_model.dart';
 import 'importer.dart';
 
+typedef ProcessRunner = Future<ProcessResult> Function(
+    String executable, List<String> arguments);
+
+ProcessRunner processRun = Process.run;
+
 class SevenZipImporter extends Importer {
   @override
   Future<BookModel> import(String filePath) async {
     await _verifySevenZip();
     final baseName = p.basenameWithoutExtension(filePath);
     final destDir = await _createDestDir(baseName);
-    final result = await Process.run('7z', ['x', filePath, '-o${destDir.path}']);
+    final result =
+        await processRun('7z', ['x', filePath, '-o${destDir.path}']);
     if (result.exitCode != 0) {
       throw Exception(result.stderr);
     }
@@ -55,7 +61,7 @@ class SevenZipImporter extends Importer {
   Future<void> _verifySevenZip() async {
     final cmd = Platform.isWindows ? 'where' : 'which';
     try {
-      final result = await Process.run(cmd, ['7z']);
+      final result = await processRun(cmd, ['7z']);
       if (result.exitCode != 0) {
         throw const ProcessException('7z', []);
       }
