@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/library_screen.dart';
+import 'screens/main_menu.dart';
 
 void main() => runApp(const ManaReaderApp());
 
@@ -11,7 +11,7 @@ class ManaReaderApp extends StatelessWidget {
     return MaterialApp(
       title: 'Mana Reader',
       theme: ThemeData.dark(),
-      home: const LibraryScreen(),
+      home: const MainMenu(),
     );
   }
 }

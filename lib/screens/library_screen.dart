@@ -7,6 +7,7 @@ import '../models/book_model.dart';
 import '../import/importer.dart';
 import 'package:file_picker/file_picker.dart';
 import 'book_detail_screen.dart';
+import 'history_screen.dart';
 
 /// Displays the list of imported books.
 class LibraryScreen extends StatefulWidget {
@@ -35,6 +36,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
   bool _isGrid = true;
   String _searchQuery = '';
   String _sortOrder = 'title';
+
+  void _openHistory() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const HistoryScreen()),
+    );
+  }
 
   @override
   void initState() {
@@ -130,6 +138,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 }
               },
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: _openHistory,
           ),
           IconButton(
             icon: Icon(_isGrid ? Icons.view_list : Icons.grid_on),

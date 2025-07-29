@@ -237,6 +237,18 @@ class DbHelper {
     return db.query('history', where: 'book_id = ?', whereArgs: [bookId]);
   }
 
+  /// Returns books that have history entries ordered by most recent read.
+  Future<List<BookModel>> fetchHistoryBooks() async {
+    final db = await database;
+    final maps = await db.rawQuery('''
+      SELECT b.* FROM books b
+      JOIN history h ON b.id = h.book_id
+      GROUP BY b.id
+      ORDER BY MAX(h.timestamp) DESC
+    ''');
+    return maps.map((e) => BookModel.fromMap(e)).toList();
+  }
+
   Future<void> addBookmark(int bookId, int page) async {
     final db = await database;
     await db.insert('bookmarks', {'book_id': bookId, 'page': page});
