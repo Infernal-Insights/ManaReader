@@ -55,4 +55,15 @@ void main() {
     await tester.pump();
     expect(find.byIcon(Icons.filter_1), findsOneWidget);
   });
+
+  testWidgets('shows bookmark toggle and slider', (tester) async {
+    final dir = Directory.systemTemp.createTempSync();
+    final imgPath = p.join(dir.path, 'a.png');
+    File(imgPath).writeAsBytesSync(base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII='));
+    final book = BookModel(title: 'Read', path: dir.path, language: 'en', pages: [imgPath]);
+    await tester.pumpWidget(MaterialApp(home: ReaderScreen(book: book)));
+    expect(find.byIcon(Icons.bookmark_border), findsOneWidget);
+    expect(find.byType(Slider), findsOneWidget);
+  });
 }

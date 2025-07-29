@@ -25,6 +25,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   bool _doublePage = false;
   bool _preload = true;
   int _currentPage = 0;
+  Set<int> _bookmarks = {};
 
   int get _pageCount =>
       _doublePage ? (_book.pages.length / 2).ceil() : _book.pages.length;
@@ -35,6 +36,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
     _book = widget.book;
     _currentPage = _book.lastPage;
     _controller = PageController(initialPage: _currentPage);
+    _loadBookmarks();
     if (_book.pages.isEmpty) {
       _loadPages().then((_) {
         if (_preload) _precache(_currentPage);
@@ -51,7 +53,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   void _onPageChanged(int index) async {
-    _currentPage = index;
+    setState(() {
+      _currentPage = index;
+    });
     final id = _book.id;
     if (id != null) {
       await DbHelper.instance.updateProgress(id, _pageToProgress(index));
@@ -59,6 +63,35 @@ class _ReaderScreenState extends State<ReaderScreen> {
     if (_preload) _precache(index + 1);
     if (index >= _pageCount - 1) {
       _showEndDialog();
+    }
+  }
+
+  Future<void> _loadBookmarks() async {
+    final id = _book.id;
+    if (id == null) return;
+    final pages = await DbHelper.instance.fetchBookmarks(id);
+    if (!mounted) return;
+    setState(() {
+      _bookmarks = pages.toSet();
+    });
+  }
+
+  bool get _isBookmarked => _bookmarks.contains(_pageToProgress(_currentPage));
+
+  Future<void> _toggleBookmark() async {
+    final id = _book.id;
+    if (id == null) return;
+    final page = _pageToProgress(_currentPage);
+    if (_bookmarks.contains(page)) {
+      await DbHelper.instance.removeBookmark(id, page);
+      setState(() {
+        _bookmarks.remove(page);
+      });
+    } else {
+      await DbHelper.instance.addBookmark(id, page);
+      setState(() {
+        _bookmarks.add(page);
+      });
     }
   }
 
@@ -203,6 +236,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
             onPressed: () => setState(() => _isRtl = !_isRtl),
           ),
           IconButton(
+            icon: Icon(
+                _isBookmarked ? Icons.bookmark : Icons.bookmark_border),
+            onPressed: _toggleBookmark,
+          ),
+          IconButton(
             icon: Icon(_doublePage ? Icons.filter_1 : Icons.filter_2),
             onPressed: () => setState(() {
               _doublePage = !_doublePage;
@@ -215,11 +253,31 @@ class _ReaderScreenState extends State<ReaderScreen> {
       ),
       body: Directionality(
         textDirection: _isRtl ? TextDirection.rtl : TextDirection.ltr,
-        child: PageView.builder(
-          controller: _controller,
-          itemCount: _pageCount,
-          onPageChanged: _onPageChanged,
-          itemBuilder: (context, index) => _buildPage(index),
+        child: Stack(
+          children: [
+            PageView.builder(
+              controller: _controller,
+              itemCount: _pageCount,
+              onPageChanged: _onPageChanged,
+              itemBuilder: (context, index) => _buildPage(index),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Slider(
+                value: _currentPage.toDouble(),
+                min: 0,
+                max: max(0, _pageCount - 1).toDouble(),
+                onChanged: (v) {
+                  setState(() {
+                    _currentPage = v.round();
+                    _controller.jumpToPage(_currentPage);
+                  });
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
