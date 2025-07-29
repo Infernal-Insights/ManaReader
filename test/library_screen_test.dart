@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:mana_reader/models/book_model.dart';
@@ -25,6 +26,8 @@ void main() {
 
   testWidgets('shows empty message with no books', (tester) async {
     await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: LibraryScreen(
         fetchBooks: ({tags, author, unread, query, orderBy}) async => [],
       ),
@@ -38,6 +41,8 @@ void main() {
   testWidgets('displays inserted books', (tester) async {
     final books = [BookModel(title: 'A', path: '/tmp/a.cbz', language: 'en')];
     await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: LibraryScreen(
         fetchBooks: ({tags, author, unread, query, orderBy}) async => books,
       ),
@@ -52,6 +57,8 @@ void main() {
   testWidgets('toggles list and grid view', (tester) async {
     final books = [BookModel(title: 'B', path: '/tmp/b.cbz', language: 'en')];
     await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: LibraryScreen(
           fetchBooks: ({tags, author, unread, query, orderBy}) async => books),
     ));
@@ -69,6 +76,8 @@ void main() {
       BookModel(id: 1, title: 'X', path: '/tmp/x.cbz', language: 'en')
     ];
     await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: LibraryScreen(
           fetchBooks: ({tags, author, unread, query, orderBy}) async => books),
     ));

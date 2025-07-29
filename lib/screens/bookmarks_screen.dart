@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../database/db_helper.dart';
 import '../models/book_model.dart';
@@ -12,9 +13,9 @@ class BookmarksScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final id = book.id;
     return Scaffold(
-      appBar: AppBar(title: const Text('Bookmarks')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.bookmarks)),
       body: id == null
-          ? const Center(child: Text('No bookmarks'))
+          ? Center(child: Text(AppLocalizations.of(context)!.noBookmarks))
           : FutureBuilder<List<int>>(
               future: DbHelper.instance.fetchBookmarks(id),
               builder: (context, snapshot) {
@@ -23,14 +24,14 @@ class BookmarksScreen extends StatelessWidget {
                 }
                 final pages = snapshot.data!;
                 if (pages.isEmpty) {
-                  return const Center(child: Text('No bookmarks'));
+                  return Center(child: Text(AppLocalizations.of(context)!.noBookmarks));
                 }
                 return ListView.builder(
                   itemCount: pages.length,
                   itemBuilder: (context, index) {
                     final p = pages[index];
                     return ListTile(
-                      title: Text('Page ${p + 1}') ,
+                      title: Text(AppLocalizations.of(context)!.pageWithNumber(page: p + 1)),
                       onTap: () => Navigator.pop(context, p),
                     );
                   },
