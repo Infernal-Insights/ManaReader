@@ -136,6 +136,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       builder: (_) => ReaderScreen(book: book),
                     ),
                   ),
+                  onLongPress: () => _confirmDelete(book),
                   child: GridTile(
                     child: FutureBuilder<String?>(
                       future: _thumbnailFor(book),
@@ -187,6 +188,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       builder: (_) => ReaderScreen(book: book),
                     ),
                   ),
+                  onLongPress: () => _confirmDelete(book),
                 );
               },
             );
@@ -262,6 +264,31 @@ class _LibraryScreenState extends State<LibraryScreen> {
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  Future<void> _confirmDelete(BookModel book) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Delete Book'),
+        content: Text('Delete "${book.title}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await DbHelper.instance.deleteBook(book.id!);
+      if (mounted) _loadBooks();
+    }
   }
 
   Future<void> _pickAndImport() async {
