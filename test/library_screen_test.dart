@@ -48,4 +48,18 @@ void main() {
 
     expect(find.text('A'), findsOneWidget);
   });
+
+  testWidgets('toggles list and grid view', (tester) async {
+    final books = [BookModel(title: 'B', path: '/tmp/b.cbz', language: 'en')];
+    await tester.pumpWidget(MaterialApp(
+      home: LibraryScreen(fetchBooks: ({tags, author, unread}) async => books),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(GridView), findsOneWidget);
+    final btn = find.byIcon(Icons.view_list);
+    await tester.tap(btn);
+    await tester.pumpAndSettle();
+    expect(find.byType(ListView), findsOneWidget);
+  });
 }
