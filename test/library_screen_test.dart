@@ -74,4 +74,19 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Delete Book'), findsOneWidget);
   });
+
+  testWidgets('opens detail screen from menu', (tester) async {
+    final books = [BookModel(id: 1, title: 'E', path: '/tmp/e.cbz', language: 'en')];
+    await tester.pumpWidget(MaterialApp(
+      home: LibraryScreen(fetchBooks: ({tags, author, unread}) async => books),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.more_vert).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Edit'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Book Details'), findsOneWidget);
+  });
 }

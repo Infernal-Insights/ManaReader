@@ -6,6 +6,7 @@ import '../models/book_model.dart';
 
 import '../import/importer.dart';
 import 'package:file_picker/file_picker.dart';
+import 'book_detail_screen.dart';
 
 
 /// Displays the list of imported books.
@@ -168,6 +169,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         book.title,
                         textAlign: TextAlign.center,
                       ),
+                      trailing: PopupMenuButton<String>(
+                        onSelected: (value) {
+                          if (value == 'edit') _openDetails(book);
+                        },
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(value: 'edit', child: Text('Edit')),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -189,6 +198,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     ),
                   ),
                   onLongPress: () => _confirmDelete(book),
+                  trailing: PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'edit') _openDetails(book);
+                    },
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(value: 'edit', child: Text('Edit')),
+                    ],
+                  ),
                 );
               },
             );
@@ -289,6 +306,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
       await DbHelper.instance.deleteBook(book.id!);
       if (mounted) _loadBooks();
     }
+  }
+
+  Future<void> _openDetails(BookModel book) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => BookDetailScreen(book: book)),
+    );
+    if (mounted) _loadBooks();
   }
 
   Future<void> _pickAndImport() async {
