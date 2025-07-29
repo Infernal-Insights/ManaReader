@@ -20,21 +20,28 @@ class ReaderScreen extends StatefulWidget {
 
 class _ReaderScreenState extends State<ReaderScreen> {
   late PageController _controller;
+  late BookModel _book;
   bool _isRtl = false;
   bool _doublePage = false;
   bool _preload = true;
   int _currentPage = 0;
 
-  int get _pageCount => _doublePage
-      ? (widget.book.pages.length / 2).ceil()
-      : widget.book.pages.length;
+  int get _pageCount =>
+      _doublePage ? (_book.pages.length / 2).ceil() : _book.pages.length;
 
   @override
   void initState() {
     super.initState();
-    _currentPage = widget.book.lastPage;
+    _book = widget.book;
+    _currentPage = _book.lastPage;
     _controller = PageController(initialPage: _currentPage);
-    if (_preload) _precache(_currentPage);
+    if (_book.pages.isEmpty) {
+      _loadPages().then((_) {
+        if (_preload) _precache(_currentPage);
+      });
+    } else {
+      if (_preload) _precache(_currentPage);
+    }
   }
 
   @override
@@ -45,7 +52,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   void _onPageChanged(int index) async {
     _currentPage = index;
-    final id = widget.book.id;
+    final id = _book.id;
     if (id != null) {
       await DbHelper.instance.updateProgress(id, _pageToProgress(index));
     }
@@ -62,11 +69,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
       final first = index * 2;
       final second = first + 1;
       return [
-        if (first < widget.book.pages.length) widget.book.pages[first],
-        if (second < widget.book.pages.length) widget.book.pages[second],
+        if (first < _book.pages.length) _book.pages[first],
+        if (second < _book.pages.length) _book.pages[second],
       ];
     }
-    return [if (index < widget.book.pages.length) widget.book.pages[index]];
+    return [if (index < _book.pages.length) _book.pages[index]];
   }
 
   void _precache(int index) {
@@ -78,13 +85,43 @@ class _ReaderScreenState extends State<ReaderScreen> {
     }
   }
 
+  Future<void> _loadPages() async {
+    final dir = Directory(_book.path);
+    final pages = await dir
+        .list(recursive: true)
+        .where((e) => e is File && _isImage(e.path))
+        .map((e) => e.path)
+        .toList();
+    pages.sort();
+    if (!mounted) return;
+    setState(() {
+      _book = BookModel(
+        id: _book.id,
+        title: _book.title,
+        path: _book.path,
+        author: _book.author,
+        language: _book.language,
+        tags: _book.tags,
+        lastPage: _book.lastPage,
+        pages: pages,
+      );
+    });
+  }
+
+  bool _isImage(String path) {
+    final lower = path.toLowerCase();
+    return lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.png') ||
+        lower.endsWith('.gif');
+  }
+
   Future<void> _showEndDialog() async {
-    final id = widget.book.id;
+    final id = _book.id;
     if (id == null) return;
 
     final db = DbHelper.instance;
-    final related =
-        await db.fetchBooks(author: widget.book.author, unread: true);
+    final related = await db.fetchBooks(author: _book.author, unread: true);
     BookModel? next;
     for (final b in related) {
       if (b.id != id) {
@@ -157,7 +194,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.book.title),
+        title: Text(_book.title),
         actions: [
           IconButton(
             icon: Icon(_isRtl
