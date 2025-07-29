@@ -26,6 +26,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   bool _preload = true;
   int _currentPage = 0;
   Set<int> _bookmarks = {};
+  bool _showUI = true;
 
   int get _pageCount =>
       _doublePage ? (_book.pages.length / 2).ceil() : _book.pages.length;
@@ -226,57 +227,64 @@ class _ReaderScreenState extends State<ReaderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_book.title),
-        actions: [
-          IconButton(
-            icon: Icon(_isRtl
-                ? Icons.format_textdirection_r_to_l
-                : Icons.format_textdirection_l_to_r),
-            onPressed: () => setState(() => _isRtl = !_isRtl),
-          ),
-          IconButton(
-            icon: Icon(
-                _isBookmarked ? Icons.bookmark : Icons.bookmark_border),
-            onPressed: _toggleBookmark,
-          ),
-          IconButton(
-            icon: Icon(_doublePage ? Icons.filter_1 : Icons.filter_2),
-            onPressed: () => setState(() {
-              _doublePage = !_doublePage;
-              final newPage = (_currentPage / (_doublePage ? 2 : 1)).floor();
-              _controller = PageController(initialPage: newPage);
-              _currentPage = newPage;
-            }),
-          ),
-        ],
-      ),
+      appBar: _showUI
+          ? AppBar(
+              title: Text(_book.title),
+              actions: [
+                IconButton(
+                  icon: Icon(_isRtl
+                      ? Icons.format_textdirection_r_to_l
+                      : Icons.format_textdirection_l_to_r),
+                  onPressed: () => setState(() => _isRtl = !_isRtl),
+                ),
+                IconButton(
+                  icon: Icon(
+                      _isBookmarked ? Icons.bookmark : Icons.bookmark_border),
+                  onPressed: _toggleBookmark,
+                ),
+                IconButton(
+                  icon: Icon(_doublePage ? Icons.filter_1 : Icons.filter_2),
+                  onPressed: () => setState(() {
+                    _doublePage = !_doublePage;
+                    final newPage =
+                        (_currentPage / (_doublePage ? 2 : 1)).floor();
+                    _controller = PageController(initialPage: newPage);
+                    _currentPage = newPage;
+                  }),
+                ),
+              ],
+            )
+          : null,
       body: Directionality(
         textDirection: _isRtl ? TextDirection.rtl : TextDirection.ltr,
         child: Stack(
           children: [
-            PageView.builder(
-              controller: _controller,
-              itemCount: _pageCount,
-              onPageChanged: _onPageChanged,
-              itemBuilder: (context, index) => _buildPage(index),
-            ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Slider(
-                value: _currentPage.toDouble(),
-                min: 0,
-                max: max(0, _pageCount - 1).toDouble(),
-                onChanged: (v) {
-                  setState(() {
-                    _currentPage = v.round();
-                    _controller.jumpToPage(_currentPage);
-                  });
-                },
+            GestureDetector(
+              onTap: () => setState(() => _showUI = !_showUI),
+              child: PageView.builder(
+                controller: _controller,
+                itemCount: _pageCount,
+                onPageChanged: _onPageChanged,
+                itemBuilder: (context, index) => _buildPage(index),
               ),
             ),
+            if (_showUI)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Slider(
+                  value: _currentPage.toDouble(),
+                  min: 0,
+                  max: max(0, _pageCount - 1).toDouble(),
+                  onChanged: (v) {
+                    setState(() {
+                      _currentPage = v.round();
+                      _controller.jumpToPage(_currentPage);
+                    });
+                  },
+                ),
+              ),
           ],
         ),
       ),
