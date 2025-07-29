@@ -27,6 +27,57 @@ Icon images have been removed from version control. During development you can g
 
 Platform icon files are not stored in this repository. Generate them locally with `flutter create .` or copy your own icons into the platform asset folders before building. If you wish to keep custom icons under version control, add them via Git LFS so only optimized binaries are tracked.
 
+## Platform Setup
+
+These folders contain only minimal stubs. Generate the full project files with
+`flutter create --platforms=<platform> .` if they are missing before adjusting
+identifiers or signing settings.
+
+### iOS
+
+- Open `ios/Runner.xcodeproj` in Xcode.
+- Update **PRODUCT_BUNDLE_IDENTIFIER** under **Signing & Capabilities**.
+- Select your Apple developer team or manually configure provisioning in the same
+  tab.
+- Build the app with:
+
+```bash
+flutter build ios     # debug or profile
+flutter build ipa     # release archive
+```
+
+### macOS
+
+- Generate the macOS folder if needed and open `macos/Runner.xcodeproj`.
+- Change **PRODUCT_BUNDLE_IDENTIFIER** and signing options in Xcode.
+- Build with:
+
+```bash
+flutter build macos
+```
+
+### Linux
+
+- The bundle identifier for Linux is defined as the binary name in
+  `linux/CMakeLists.txt`.
+- After editing, build the desktop binary with:
+
+```bash
+flutter build linux
+```
+
+### Windows
+
+- If the Windows folder is not present, run `flutter create --platforms=windows .`.
+- Edit `windows/runner/CMakeLists.txt` and `windows/runner/Runner.rc` to adjust
+  the executable name and company info.
+- Optional code signing can be performed using `signtool` after building.
+- Build with:
+
+```bash
+flutter build windows
+```
+
 ## Roadmap
 
 Upcoming features include:
