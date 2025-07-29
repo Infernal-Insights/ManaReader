@@ -91,8 +91,8 @@ void main() {
     });
 
     test('delete book', () async {
-      final id = await dbHelper
-          .insertBook(BookModel(title: 'Del', path: '/tmp/a.cbz', language: 'en'));
+      final id = await dbHelper.insertBook(
+          BookModel(title: 'Del', path: '/tmp/a.cbz', language: 'en'));
       await dbHelper.deleteBook(id);
       final books = await dbHelper.fetchBooks();
       expect(books, isEmpty);
@@ -100,9 +100,18 @@ void main() {
 
     test('fetchBooks with filters', () async {
       await dbHelper.insertBook(BookModel(
-          title: 'A', path: '/tmp/a.cbz', language: 'en', author: 'Alice', tags: ['x']));
+          title: 'A',
+          path: '/tmp/a.cbz',
+          language: 'en',
+          author: 'Alice',
+          tags: ['x']));
       await dbHelper.insertBook(BookModel(
-          title: 'B', path: '/tmp/b.cbz', language: 'en', author: 'Bob', tags: ['y'], lastPage: 2));
+          title: 'B',
+          path: '/tmp/b.cbz',
+          language: 'en',
+          author: 'Bob',
+          tags: ['y'],
+          lastPage: 2));
 
       final tagFiltered = await dbHelper.fetchBooks(tags: ['x']);
       expect(tagFiltered.map((b) => b.title), ['A']);
@@ -116,9 +125,17 @@ void main() {
 
     test('fetchAllAuthors and fetchAllTags', () async {
       await dbHelper.insertBook(BookModel(
-          title: 'A', path: '/tmp/a.cbz', language: 'en', author: 'Me', tags: ['x','y']));
+          title: 'A',
+          path: '/tmp/a.cbz',
+          language: 'en',
+          author: 'Me',
+          tags: ['x', 'y']));
       await dbHelper.insertBook(BookModel(
-          title: 'B', path: '/tmp/b.cbz', language: 'en', author: 'You', tags: ['y']));
+          title: 'B',
+          path: '/tmp/b.cbz',
+          language: 'en',
+          author: 'You',
+          tags: ['y']));
 
       final authors = await dbHelper.fetchAllAuthors();
       expect(authors.toSet(), {'Me', 'You'});
@@ -138,8 +155,8 @@ void main() {
     });
 
     test('history insertion and fetch', () async {
-      final id = await dbHelper
-          .insertBook(BookModel(title: 'Hist', path: '/tmp/h.cbz', language: 'en'));
+      final id = await dbHelper.insertBook(
+          BookModel(title: 'Hist', path: '/tmp/h.cbz', language: 'en'));
       await dbHelper.updateProgress(id, 3);
       final history = await dbHelper.fetchHistory(id);
       expect(history, isNotEmpty);
@@ -147,8 +164,8 @@ void main() {
     });
 
     test('bookmark add and remove', () async {
-      final id = await dbHelper
-          .insertBook(BookModel(title: 'Bm', path: '/tmp/h.cbz', language: 'en'));
+      final id = await dbHelper.insertBook(
+          BookModel(title: 'Bm', path: '/tmp/h.cbz', language: 'en'));
       await dbHelper.addBookmark(id, 2);
       var bookmarks = await dbHelper.fetchBookmarks(id);
       expect(bookmarks, contains(2));
@@ -156,6 +173,5 @@ void main() {
       bookmarks = await dbHelper.fetchBookmarks(id);
       expect(bookmarks, isEmpty);
     });
-
   });
 }

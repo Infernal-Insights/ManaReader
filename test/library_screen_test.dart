@@ -26,7 +26,7 @@ void main() {
   testWidgets('shows empty message with no books', (tester) async {
     await tester.pumpWidget(MaterialApp(
       home: LibraryScreen(
-        fetchBooks: ({tags, author, unread}) async => [],
+        fetchBooks: ({tags, author, unread, query, orderBy}) async => [],
       ),
     ));
     await tester.pump();
@@ -39,7 +39,7 @@ void main() {
     final books = [BookModel(title: 'A', path: '/tmp/a.cbz', language: 'en')];
     await tester.pumpWidget(MaterialApp(
       home: LibraryScreen(
-        fetchBooks: ({tags, author, unread}) async => books,
+        fetchBooks: ({tags, author, unread, query, orderBy}) async => books,
       ),
     ));
     await tester.pump();
@@ -52,7 +52,8 @@ void main() {
   testWidgets('toggles list and grid view', (tester) async {
     final books = [BookModel(title: 'B', path: '/tmp/b.cbz', language: 'en')];
     await tester.pumpWidget(MaterialApp(
-      home: LibraryScreen(fetchBooks: ({tags, author, unread}) async => books),
+      home: LibraryScreen(
+          fetchBooks: ({tags, author, unread, query, orderBy}) async => books),
     ));
     await tester.pumpAndSettle();
 
@@ -64,9 +65,12 @@ void main() {
   });
 
   testWidgets('shows delete dialog on long press', (tester) async {
-    final books = [BookModel(id: 1, title: 'X', path: '/tmp/x.cbz', language: 'en')];
+    final books = [
+      BookModel(id: 1, title: 'X', path: '/tmp/x.cbz', language: 'en')
+    ];
     await tester.pumpWidget(MaterialApp(
-      home: LibraryScreen(fetchBooks: ({tags, author, unread}) async => books),
+      home: LibraryScreen(
+          fetchBooks: ({tags, author, unread, query, orderBy}) async => books),
     ));
     await tester.pumpAndSettle();
 
@@ -76,9 +80,12 @@ void main() {
   });
 
   testWidgets('opens detail screen from menu', (tester) async {
-    final books = [BookModel(id: 1, title: 'E', path: '/tmp/e.cbz', language: 'en')];
+    final books = [
+      BookModel(id: 1, title: 'E', path: '/tmp/e.cbz', language: 'en')
+    ];
     await tester.pumpWidget(MaterialApp(
-      home: LibraryScreen(fetchBooks: ({tags, author, unread}) async => books),
+      home: LibraryScreen(
+          fetchBooks: ({tags, author, unread, query, orderBy}) async => books),
     ));
     await tester.pumpAndSettle();
 
