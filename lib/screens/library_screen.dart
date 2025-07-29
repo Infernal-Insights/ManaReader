@@ -77,8 +77,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   final Map<String, Future<String?>> _thumbCache = {};
 
+  final Map<String, Future<double>> _progressCache = {};
+
   Future<String?> _thumbnailFor(BookModel book) {
     return _thumbCache[book.path] ??= _loadThumbnail(book);
+  }
+
+  Future<double> _progressFor(BookModel book) {
+    return _progressCache[book.path] ??= _loadProgress(book);
   }
 
   Future<String?> _loadThumbnail(BookModel book) async {
@@ -98,6 +104,27 @@ class _LibraryScreenState extends State<LibraryScreen> {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<double> _loadProgress(BookModel book) async {
+    int count = book.pages.length;
+    if (count == 0) {
+      final dir = Directory(book.path);
+      if (!await dir.exists()) return 0;
+      try {
+        final files = await dir
+            .list(recursive: true)
+            .where((e) => e is File && _isImage(e.path))
+            .toList();
+        files.sort();
+        count = files.length;
+      } catch (_) {
+        return 0;
+      }
+    }
+    if (count == 0) return 0;
+    final progress = book.lastPage / count;
+    return progress.clamp(0, 1).toDouble();
   }
 
   bool _isImage(String path) {
@@ -179,26 +206,47 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   ),
                   onLongPress: () => _confirmDelete(book),
                   child: GridTile(
-                    child: FutureBuilder<String?>(
-                      future: _thumbnailFor(book),
-                      builder: (context, snap) {
-                        if (snap.connectionState != ConnectionState.done) {
-                          return Container(
-                            color: Colors.grey.shade800,
-                            alignment: Alignment.center,
-                            child: const CircularProgressIndicator(),
-                          );
-                        }
-                        final path = snap.data;
-                        if (path != null) {
-                          return Image.file(File(path), fit: BoxFit.cover);
-                        }
-                        return Container(
-                          color: Colors.grey.shade800,
-                          alignment: Alignment.center,
-                          child: const Icon(Icons.book, size: 48),
-                        );
-                      },
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        FutureBuilder<String?>(
+                          future: _thumbnailFor(book),
+                          builder: (context, snap) {
+                            if (snap.connectionState != ConnectionState.done) {
+                              return Container(
+                                color: Colors.grey.shade800,
+                                alignment: Alignment.center,
+                                child: const CircularProgressIndicator(),
+                              );
+                            }
+                            final path = snap.data;
+                            if (path != null) {
+                              return Image.file(File(path), fit: BoxFit.cover);
+                            }
+                            return Container(
+                              color: Colors.grey.shade800,
+                              alignment: Alignment.center,
+                              child: const Icon(Icons.book, size: 48),
+                            );
+                          },
+                        ),
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: FutureBuilder<double>(
+                            future: _progressFor(book),
+                            builder: (context, progressSnap) {
+                              final value = progressSnap.data ?? 0.0;
+                              return LinearProgressIndicator(
+                                value: value,
+                                minHeight: 4,
+                                backgroundColor: Colors.black26,
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                     footer: GridTileBar(
                       backgroundColor: Colors.black54,
@@ -224,7 +272,24 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 final book = books[index];
                 return ListTile(
                   title: Text(book.title),
-                  subtitle: Text(book.author),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(book.author),
+                      const SizedBox(height: 4),
+                      FutureBuilder<double>(
+                        future: _progressFor(book),
+                        builder: (context, snap) {
+                          final value = snap.data ?? 0.0;
+                          return LinearProgressIndicator(
+                            value: value,
+                            minHeight: 4,
+                            backgroundColor: Colors.black26,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => ReaderScreen(book: book)),
