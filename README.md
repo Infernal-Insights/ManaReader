@@ -12,6 +12,7 @@ Mana Reader aims to be a lightweight, cross‑platform manga and doujinshi reade
 
 - **Dart**: >=2.17.0 <3.0.0
 - **Flutter**: tested with Flutter 3; newer versions in the same major series should work.
+- **7-Zip**: required for importing `.cb7`/`.7z` archives. Install `7z` and ensure it is available in your `PATH` (e.g. `sudo apt-get install p7zip-full`).
 
 ## Development Setup
 
