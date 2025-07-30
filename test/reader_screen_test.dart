@@ -103,4 +103,29 @@ void main() {
 
     expect(find.text('No bookmarks'), findsOneWidget);
   });
+
+  testWidgets('tapping right edge changes the page', (tester) async {
+    final dir = Directory.systemTemp.createTempSync();
+    final img1 = p.join(dir.path, 'a.png');
+    final img2 = p.join(dir.path, 'b.png');
+    final bytes = base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=');
+    File(img1).writeAsBytesSync(bytes);
+    File(img2).writeAsBytesSync(bytes);
+    final book = BookModel(title: 'Read', path: dir.path, language: 'en', pages: [img1, img2]);
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: ReaderScreen(book: book),
+    ));
+
+    Slider slider = tester.widget(find.byType(Slider));
+    expect(slider.value, 0);
+
+    await tester.tap(find.byKey(const Key('next_page_zone')));
+    await tester.pumpAndSettle();
+
+    slider = tester.widget(find.byType(Slider));
+    expect(slider.value, 1);
+  });
 }
