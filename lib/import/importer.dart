@@ -20,7 +20,6 @@ class Importer {
     final merged = BookModel(
       title: meta?.title ?? book.title,
       path: book.path,
-      author: meta?.author ?? book.author,
       language: meta?.language ?? book.language,
       tags: meta?.tags ?? book.tags,
       pages: book.pages,
