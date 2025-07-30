@@ -28,7 +28,7 @@ class DbHelper {
     final path = p.join(documentsDir.path, 'mana_reader.db');
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE books(
@@ -38,7 +38,8 @@ class DbHelper {
             author TEXT,
             language TEXT,
             tags TEXT,
-            last_page INTEGER
+            last_page INTEGER,
+            favorite INTEGER DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -67,6 +68,10 @@ class DbHelper {
             )
           ''');
         }
+        if (oldVersion < 3) {
+          await db.execute(
+              'ALTER TABLE books ADD COLUMN favorite INTEGER DEFAULT 0');
+        }
       },
     );
   }
@@ -91,6 +96,16 @@ class DbHelper {
       book.toMap(),
       where: 'id = ?',
       whereArgs: [book.id],
+    );
+  }
+
+  Future<void> toggleFavorite(int id, bool isFav) async {
+    final db = await database;
+    await db.update(
+      'books',
+      {'favorite': isFav ? 1 : 0},
+      where: 'id = ?',
+      whereArgs: [id],
     );
   }
 
@@ -142,6 +157,7 @@ class DbHelper {
     String? author,
     String? language,
     bool? unread,
+    bool? favorite,
     String? query,
     String? orderBy,
   }) async {
@@ -164,6 +180,10 @@ class DbHelper {
     }
     if (unread != null) {
       where.add(unread ? 'last_page = 0' : 'last_page > 0');
+    }
+    if (favorite != null) {
+      where.add('favorite = ?');
+      args.add(favorite ? 1 : 0);
     }
     if (query != null && query.isNotEmpty) {
       where.add('title LIKE ?');

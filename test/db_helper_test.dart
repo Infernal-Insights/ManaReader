@@ -123,6 +123,17 @@ void main() {
       expect(unread.map((b) => b.title), ['A']);
     });
 
+    test('favorite toggle and filtering', () async {
+      final id = await dbHelper.insertBook(
+          BookModel(title: 'Fav', path: '/tmp/f.cbz', language: 'en'));
+      await dbHelper.toggleFavorite(id, true);
+      var favs = await dbHelper.fetchBooks(favorite: true);
+      expect(favs.map((b) => b.id), contains(id));
+      await dbHelper.toggleFavorite(id, false);
+      favs = await dbHelper.fetchBooks(favorite: true);
+      expect(favs, isEmpty);
+    });
+
     test('fetchAllAuthors and fetchAllTags', () async {
       await dbHelper.insertBook(BookModel(
           title: 'A',

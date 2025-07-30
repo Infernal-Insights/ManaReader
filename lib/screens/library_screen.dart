@@ -40,6 +40,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   String? _selectedAuthor;
   String? _selectedLanguage;
   bool _showUnread = false;
+  bool _showFavorites = false;
   bool _isGrid = true;
   String _searchQuery = '';
   String _sortOrder = 'title';
@@ -67,6 +68,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         author: _selectedAuthor,
         language: _selectedLanguage,
         unread: _showUnread ? true : null,
+        favorite: _showFavorites ? true : null,
         query: _searchQuery.isNotEmpty ? _searchQuery : null,
         orderBy: _sortOrder,
       );
@@ -237,6 +239,23 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           },
                         ),
                         Positioned(
+                          top: 4,
+                          left: 4,
+                          child: IconButton(
+                            icon: Icon(
+                              book.favorite ? Icons.star : Icons.star_border,
+                              color: Colors.amber,
+                            ),
+                            onPressed: () async {
+                              if (book.id != null) {
+                                await DbHelper.instance
+                                    .toggleFavorite(book.id!, !book.favorite);
+                                _loadBooks();
+                              }
+                            },
+                          ),
+                        ),
+                        Positioned(
                           left: 0,
                           right: 0,
                           bottom: 0,
@@ -320,6 +339,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                   fontSize: 12, color: Colors.white),
                             ),
                           );
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          book.favorite ? Icons.star : Icons.star_border,
+                          color: Colors.amber,
+                        ),
+                        onPressed: () async {
+                          if (book.id != null) {
+                            await DbHelper.instance
+                                .toggleFavorite(book.id!, !book.favorite);
+                            _loadBooks();
+                          }
                         },
                       ),
                       PopupMenuButton<String>(
@@ -429,6 +461,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
                             },
                           ),
                           Text(AppLocalizations.of(context)!.unread),
+                          IconButton(
+                            icon: Icon(
+                                _showFavorites ? Icons.star : Icons.star_border),
+                            onPressed: () {
+                              setState(() => _showFavorites = !_showFavorites);
+                              _loadBooks();
+                            },
+                          ),
                         ],
                       ),
                     ],

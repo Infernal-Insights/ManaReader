@@ -144,4 +144,23 @@ void main() {
     expect(find.text('EN'), findsNothing);
     expect(find.text('JP'), findsOneWidget);
   });
+
+  testWidgets('favorite filter button', (tester) async {
+    bool? receivedFavorite;
+    final books = [BookModel(title: 'F', path: '/tmp/f.cbz', language: 'en')];
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: LibraryScreen(fetchBooks: ({favorite, tags, author, language, unread, query, orderBy}) async {
+        receivedFavorite = favorite;
+        return books;
+      }),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(receivedFavorite, isNull);
+    await tester.tap(find.byIcon(Icons.star_border));
+    await tester.pumpAndSettle();
+    expect(receivedFavorite, isTrue);
+  });
 }
