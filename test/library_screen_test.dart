@@ -163,4 +163,63 @@ void main() {
     await tester.pumpAndSettle();
     expect(receivedFavorite, isTrue);
   });
+
+  testWidgets('filters by multiple tags', (tester) async {
+    final fakeDb = DbHelper();
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+    PathProviderPlatform.instance = _FakePathProviderPlatform();
+    await fakeDb.insertBook(BookModel(
+        title: 'A', path: '/tmp/a.cbz', language: 'en', tags: ['a']));
+    await fakeDb.insertBook(BookModel(
+        title: 'B', path: '/tmp/b.cbz', language: 'en', tags: ['b']));
+    await fakeDb.insertBook(BookModel(
+        title: 'AB', path: '/tmp/ab.cbz', language: 'en', tags: ['a', 'b']));
+
+    final books = [
+      BookModel(title: 'A', path: '/tmp/a.cbz', language: 'en', tags: ['a']),
+      BookModel(title: 'B', path: '/tmp/b.cbz', language: 'en', tags: ['b']),
+      BookModel(title: 'AB', path: '/tmp/ab.cbz', language: 'en', tags: ['a', 'b']),
+    ];
+
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: LibraryScreen(
+        fetchBooks: ({tags, author, language, unread, query, orderBy}) async {
+          return books.where((b) {
+            if (tags != null && tags.isNotEmpty) {
+              for (final t in tags) {
+                if (!b.tags.contains(t)) return false;
+              }
+            }
+            return true;
+          }).toList();
+        },
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('A'), findsOneWidget);
+    expect(find.text('B'), findsOneWidget);
+    expect(find.text('AB'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilterChip, 'a'));
+    await tester.pumpAndSettle();
+    expect(find.text('A'), findsOneWidget);
+    expect(find.text('AB'), findsOneWidget);
+    expect(find.text('B'), findsNothing);
+
+    await tester.tap(find.widgetWithText(FilterChip, 'b'));
+    await tester.pumpAndSettle();
+    expect(find.text('AB'), findsOneWidget);
+    expect(find.text('A'), findsNothing);
+    expect(find.text('B'), findsNothing);
+
+    await tester.tap(find.widgetWithText(FilterChip, 'Clear').first);
+    await tester.pumpAndSettle();
+    expect(find.text('A'), findsOneWidget);
+    expect(find.text('B'), findsOneWidget);
+    expect(find.text('AB'), findsOneWidget);
+  });
 }

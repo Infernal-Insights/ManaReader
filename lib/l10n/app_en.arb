@@ -29,7 +29,7 @@
   "bookDetails": "Book Details",
   "language": "Language",
   "tagsCommaSeparated": "Tags (comma separated)",
-  "fitWidth": "Fit Width"
-  ,
+  "fitWidth": "Fit Width",
+  "clear": "Clear",
   "continueReading": "Continue Reading"
 }
