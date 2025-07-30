@@ -36,8 +36,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
   List<String> _tags = [];
   List<String> _authors = [];
   List<String> _languages = [];
-  String? _selectedTag;
-  String? _selectedAuthor;
+  final Set<String> _selectedTags = <String>{};
+  final Set<String> _selectedAuthors = <String>{};
   String? _selectedLanguage;
   bool _showUnread = false;
   bool _showFavorites = false;
@@ -64,8 +64,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
     setState(() {
       final fetch = widget.fetchBooks ?? DbHelper.instance.fetchBooks;
       _books = fetch(
-        tags: _selectedTag != null ? [_selectedTag!] : null,
-        author: _selectedAuthor,
+        tags: _selectedTags.isNotEmpty ? _selectedTags.toList() : null,
+        author: _selectedAuthors.isNotEmpty ? _selectedAuthors.first : null,
         language: _selectedLanguage,
         unread: _showUnread ? true : null,
         favorite: _showFavorites ? true : null,
@@ -381,52 +381,71 @@ class _LibraryScreenState extends State<LibraryScreen> {
               if (_tags.isNotEmpty || _authors.isNotEmpty || _languages.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Row(
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       if (_tags.isNotEmpty)
-                        DropdownButton<String?>(
-                          hint: Text(AppLocalizations.of(context)!.tag),
-                          value: _selectedTag,
-                          items: [
-                            DropdownMenuItem<String?>(
-                              value: null,
-                              child: Text(AppLocalizations.of(context)!.all),
+                        Wrap(
+                          spacing: 4,
+                          children: [
+                            FilterChip(
+                              label: Text(AppLocalizations.of(context)!.clear),
+                              visualDensity: VisualDensity.compact,
+                              onSelected: (_) {
+                                setState(() => _selectedTags.clear());
+                                _loadBooks();
+                              },
                             ),
                             ..._tags.map(
-                              (e) => DropdownMenuItem<String?>(
-                                value: e,
-                                child: Text(e),
+                              (tag) => FilterChip(
+                                label: Text(tag),
+                                selected: _selectedTags.contains(tag),
+                                onSelected: (v) {
+                                  setState(() {
+                                    if (v) {
+                                      _selectedTags.add(tag);
+                                    } else {
+                                      _selectedTags.remove(tag);
+                                    }
+                                  });
+                                  _loadBooks();
+                                },
                               ),
                             ),
                           ],
-                          onChanged: (value) {
-                            _selectedTag = value;
-                            _loadBooks();
-                          },
                         ),
-                      const SizedBox(width: 8),
                       if (_authors.isNotEmpty)
-                        DropdownButton<String?>(
-                          hint: Text(AppLocalizations.of(context)!.author),
-                          value: _selectedAuthor,
-                          items: [
-                            DropdownMenuItem<String?>(
-                              value: null,
-                              child: Text(AppLocalizations.of(context)!.all),
+                        Wrap(
+                          spacing: 4,
+                          children: [
+                            FilterChip(
+                              label: Text(AppLocalizations.of(context)!.clear),
+                              visualDensity: VisualDensity.compact,
+                              onSelected: (_) {
+                                setState(() => _selectedAuthors.clear());
+                                _loadBooks();
+                              },
                             ),
                             ..._authors.map(
-                              (e) => DropdownMenuItem<String?>(
-                                value: e,
-                                child: Text(e),
+                              (author) => FilterChip(
+                                label: Text(author),
+                                selected: _selectedAuthors.contains(author),
+                                onSelected: (v) {
+                                  setState(() {
+                                    if (v) {
+                                      _selectedAuthors.add(author);
+                                    } else {
+                                      _selectedAuthors.remove(author);
+                                    }
+                                  });
+                                  _loadBooks();
+                                },
                               ),
                             ),
                           ],
-                          onChanged: (value) {
-                            _selectedAuthor = value;
-                            _loadBooks();
-                          },
                         ),
-                      const SizedBox(width: 8),
                       if (_languages.isNotEmpty)
                         DropdownButton<String?>(
                           hint: Text(AppLocalizations.of(context)!.language),
@@ -448,8 +467,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
                             _loadBooks();
                           },
                         ),
-                      const SizedBox(width: 8),
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Checkbox(
                             value: _showUnread,
