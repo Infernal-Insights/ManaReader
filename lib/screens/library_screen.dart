@@ -6,7 +6,10 @@ import '../database/db_helper.dart';
 import '../models/book_model.dart';
 
 import '../import/importer.dart';
+import '../import/sync_service.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'book_detail_screen.dart';
 import 'history_screen.dart';
 
@@ -162,6 +165,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
           IconButton(
             icon: const Icon(Icons.history),
             onPressed: _openHistory,
+          ),
+          IconButton(
+            icon: const Icon(Icons.sync),
+            onPressed: _syncDirectory,
           ),
           IconButton(
             icon: Icon(_isGrid ? Icons.view_list : Icons.grid_on),
@@ -460,6 +467,27 @@ class _LibraryScreenState extends State<LibraryScreen> {
       final importer = Importer();
       await importer.importPath(path);
       _loadBooks();
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.importFailed(error: e.toString()),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _syncDirectory() async {
+    final path = await FilePicker.platform.getDirectoryPath();
+    if (path == null) return;
+    try {
+      await syncDirectoryPath(path);
+      if (mounted) _loadBooks();
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(
