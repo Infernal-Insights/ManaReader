@@ -20,6 +20,8 @@ class ReaderScreen extends StatefulWidget {
   State<ReaderScreen> createState() => _ReaderScreenState();
 }
 
+enum FitMode { contain, fitWidth }
+
 class _ReaderScreenState extends State<ReaderScreen> {
   late PageController _controller;
   late BookModel _book;
@@ -29,6 +31,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   int _currentPage = 0;
   Set<int> _bookmarks = {};
   bool _showUI = true;
+  FitMode _fitMode = FitMode.contain;
 
   int get _pageCount =>
       _doublePage ? (_book.pages.length / 2).ceil() : _book.pages.length;
@@ -232,13 +235,16 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   Widget _buildPage(int index) {
     final pages = _pagesForIndex(index);
+    final fit =
+        _fitMode == FitMode.contain ? BoxFit.contain : BoxFit.fitWidth;
     if (pages.length == 1) {
-      return _ZoomableImage(path: pages.first);
+      return _ZoomableImage(path: pages.first, fit: fit);
     }
     return Row(
       children: [
-        Expanded(child: _ZoomableImage(path: pages[0])),
-        if (pages.length > 1) Expanded(child: _ZoomableImage(path: pages[1])),
+        Expanded(child: _ZoomableImage(path: pages[0], fit: fit)),
+        if (pages.length > 1)
+          Expanded(child: _ZoomableImage(path: pages[1], fit: fit)),
       ],
     );
   }
@@ -269,6 +275,16 @@ class _ReaderScreenState extends State<ReaderScreen> {
                         (_currentPage / (_doublePage ? 2 : 1)).floor();
                     _controller = PageController(initialPage: newPage);
                     _currentPage = newPage;
+                  }),
+                ),
+                IconButton(
+                  icon: Icon(_fitMode == FitMode.contain
+                      ? Icons.fit_screen
+                      : Icons.width_wide),
+                  tooltip: AppLocalizations.of(context)!.fitWidth,
+                  onPressed: () => setState(() {
+                    _fitMode = FitMode
+                        .values[(_fitMode.index + 1) % FitMode.values.length];
                   }),
                 ),
                 PopupMenuButton<String>(
@@ -354,7 +370,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
 class _ZoomableImage extends StatefulWidget {
   final String path;
-  const _ZoomableImage({required this.path});
+  final BoxFit fit;
+  const _ZoomableImage({required this.path, required this.fit});
 
   @override
   State<_ZoomableImage> createState() => _ZoomableImageState();
@@ -386,7 +403,7 @@ class _ZoomableImageState extends State<_ZoomableImage> {
       onDoubleTap: _handleDoubleTap,
       child: InteractiveViewer(
         transformationController: _controller,
-        child: Image.file(File(widget.path), fit: BoxFit.contain),
+        child: Image.file(File(widget.path), fit: widget.fit),
       ),
     );
   }
