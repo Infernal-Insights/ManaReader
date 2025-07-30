@@ -18,6 +18,7 @@ class LibraryScreen extends StatefulWidget {
   final Future<List<BookModel>> Function({
     List<String>? tags,
     String? author,
+    String? language,
     bool? unread,
     String? query,
     String? orderBy,
@@ -34,8 +35,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
   late Future<List<BookModel>> _books;
   List<String> _tags = [];
   List<String> _authors = [];
+  List<String> _languages = [];
   String? _selectedTag;
   String? _selectedAuthor;
+  String? _selectedLanguage;
   bool _showUnread = false;
   bool _isGrid = true;
   String _searchQuery = '';
@@ -62,6 +65,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       _books = fetch(
         tags: _selectedTag != null ? [_selectedTag!] : null,
         author: _selectedAuthor,
+        language: _selectedLanguage,
         unread: _showUnread ? true : null,
         query: _searchQuery.isNotEmpty ? _searchQuery : null,
         orderBy: _sortOrder,
@@ -72,10 +76,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
   Future<void> _initFilters() async {
     final tags = await DbHelper.instance.fetchAllTags();
     final authors = await DbHelper.instance.fetchAllAuthors();
+    final languages = await DbHelper.instance.fetchAllLanguages();
     if (!mounted) return;
     setState(() {
       _tags = tags;
       _authors = authors;
+      _languages = languages;
     });
   }
 
@@ -340,7 +346,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
           return Column(
             children: [
-              if (_tags.isNotEmpty || _authors.isNotEmpty)
+              if (_tags.isNotEmpty || _authors.isNotEmpty || _languages.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
@@ -385,6 +391,28 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           ],
                           onChanged: (value) {
                             _selectedAuthor = value;
+                            _loadBooks();
+                          },
+                        ),
+                      const SizedBox(width: 8),
+                      if (_languages.isNotEmpty)
+                        DropdownButton<String?>(
+                          hint: Text(AppLocalizations.of(context)!.language),
+                          value: _selectedLanguage,
+                          items: [
+                            DropdownMenuItem<String?>(
+                              value: null,
+                              child: Text(AppLocalizations.of(context)!.all),
+                            ),
+                            ..._languages.map(
+                              (e) => DropdownMenuItem<String?>(
+                                value: e,
+                                child: Text(e),
+                              ),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            _selectedLanguage = value;
                             _loadBooks();
                           },
                         ),

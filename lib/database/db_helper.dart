@@ -140,6 +140,7 @@ class DbHelper {
   Future<List<BookModel>> fetchBooks({
     List<String>? tags,
     String? author,
+    String? language,
     bool? unread,
     String? query,
     String? orderBy,
@@ -156,6 +157,10 @@ class DbHelper {
     if (author != null && author.isNotEmpty) {
       where.add('author = ?');
       args.add(author);
+    }
+    if (language != null && language.isNotEmpty) {
+      where.add('language = ?');
+      args.add(language);
     }
     if (unread != null) {
       where.add(unread ? 'last_page = 0' : 'last_page > 0');
@@ -194,6 +199,14 @@ class DbHelper {
       'SELECT DISTINCT author FROM books WHERE author IS NOT NULL AND author != ""',
     );
     return maps.map((e) => e['author'] as String).toList();
+  }
+
+  Future<List<String>> fetchAllLanguages() async {
+    final db = await database;
+    final maps = await db.rawQuery(
+      'SELECT DISTINCT language FROM books WHERE language IS NOT NULL AND language != ""',
+    );
+    return maps.map((e) => e['language'] as String).toList();
   }
 
   Future<List<String>> fetchAllTags() async {

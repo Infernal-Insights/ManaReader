@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:mana_reader/models/book_model.dart';
 import 'package:mana_reader/screens/library_screen.dart';
+import 'package:mana_reader/database/db_helper.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class _FakePathProviderPlatform extends PathProviderPlatform {
   final Directory tempDir =
@@ -29,7 +31,7 @@ void main() {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: LibraryScreen(
-        fetchBooks: ({tags, author, unread, query, orderBy}) async => [],
+        fetchBooks: ({tags, author, language, unread, query, orderBy}) async => [],
       ),
     ));
     await tester.pump();
@@ -44,7 +46,7 @@ void main() {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: LibraryScreen(
-        fetchBooks: ({tags, author, unread, query, orderBy}) async => books,
+        fetchBooks: ({tags, author, language, unread, query, orderBy}) async => books,
       ),
     ));
     await tester.pump();
@@ -60,7 +62,7 @@ void main() {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: LibraryScreen(
-          fetchBooks: ({tags, author, unread, query, orderBy}) async => books),
+          fetchBooks: ({tags, author, language, unread, query, orderBy}) async => books),
     ));
     await tester.pumpAndSettle();
 
@@ -79,7 +81,7 @@ void main() {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: LibraryScreen(
-          fetchBooks: ({tags, author, unread, query, orderBy}) async => books),
+          fetchBooks: ({tags, author, language, unread, query, orderBy}) async => books),
     ));
     await tester.pumpAndSettle();
 
@@ -94,7 +96,7 @@ void main() {
     ];
     await tester.pumpWidget(MaterialApp(
       home: LibraryScreen(
-          fetchBooks: ({tags, author, unread, query, orderBy}) async => books),
+          fetchBooks: ({tags, author, language, unread, query, orderBy}) async => books),
     ));
     await tester.pumpAndSettle();
 
@@ -104,5 +106,42 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Book Details'), findsOneWidget);
+  });
+
+  testWidgets('filters by language', (tester) async {
+    final fakeDb = DbHelper();
+    // Initialize ffi for db usage
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+    PathProviderPlatform.instance = _FakePathProviderPlatform();
+    await fakeDb.insertBook(BookModel(title: 'EN', path: '/tmp/en.cbz', language: 'en'));
+    await fakeDb.insertBook(BookModel(title: 'JP', path: '/tmp/jp.cbz', language: 'jp'));
+
+    final books = [
+      BookModel(title: 'EN', path: '/tmp/en.cbz', language: 'en'),
+      BookModel(title: 'JP', path: '/tmp/jp.cbz', language: 'jp'),
+    ];
+
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: LibraryScreen(
+        fetchBooks: ({tags, author, language, unread, query, orderBy}) async {
+          return books.where((b) => language == null || b.language == language).toList();
+        },
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('EN'), findsOneWidget);
+    expect(find.text('JP'), findsOneWidget);
+
+    await tester.tap(find.text('Language'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('jp').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('EN'), findsNothing);
+    expect(find.text('JP'), findsOneWidget);
   });
 }
