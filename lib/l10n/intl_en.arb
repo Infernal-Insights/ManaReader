@@ -28,5 +28,6 @@
   "randomUnread": "Random Unread",
   "bookDetails": "Book Details",
   "language": "Language",
-  "tagsCommaSeparated": "Tags (comma separated)"
+  "tagsCommaSeparated": "Tags (comma separated)",
+  "fitWidth": "Fit Width"
 }
