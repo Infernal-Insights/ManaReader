@@ -289,13 +289,43 @@ class _ReaderScreenState extends State<ReaderScreen> {
         textDirection: _isRtl ? TextDirection.rtl : TextDirection.ltr,
         child: Stack(
           children: [
-            GestureDetector(
-              onTap: () => setState(() => _showUI = !_showUI),
-              child: PageView.builder(
-                controller: _controller,
-                itemCount: _pageCount,
-                onPageChanged: _onPageChanged,
-                itemBuilder: (context, index) => _buildPage(index),
+            PageView.builder(
+              controller: _controller,
+              itemCount: _pageCount,
+              onPageChanged: _onPageChanged,
+              itemBuilder: (context, index) => _buildPage(index),
+            ),
+            Positioned.fill(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      key: const Key('previous_page_zone'),
+                      behavior: HitTestBehavior.translucent,
+                      onTap: () => _controller.previousPage(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeInOut,
+                      ),
+                    ),
+                  ),
+                  const Expanded(child: SizedBox.shrink()),
+                  Expanded(
+                    child: GestureDetector(
+                      key: const Key('next_page_zone'),
+                      behavior: HitTestBehavior.translucent,
+                      onTap: () => _controller.nextPage(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeInOut,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () => setState(() => _showUI = !_showUI),
               ),
             ),
             if (_showUI)
