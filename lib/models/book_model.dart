@@ -7,6 +7,7 @@ class BookModel {
   final List<String> tags;
   final int lastPage;
   final List<String> pages;
+  final bool favorite;
 
   BookModel({
     this.id,
@@ -17,6 +18,7 @@ class BookModel {
     this.tags = const [],
     this.lastPage = 0,
     this.pages = const [],
+    this.favorite = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -28,6 +30,7 @@ class BookModel {
       'language': language,
       'tags': tags.join(','),
       'last_page': lastPage,
+      'favorite': favorite ? 1 : 0,
     }..removeWhere((key, value) => value == null);
   }
 
@@ -40,6 +43,7 @@ class BookModel {
       language: map['language'] as String? ?? 'unknown',
       tags: (map['tags'] as String? ?? '').split(',').where((t) => t.isNotEmpty).toList(),
       lastPage: map['last_page'] as int? ?? 0,
+      favorite: (map['favorite'] as int? ?? 0) == 1,
     );
   }
 }
