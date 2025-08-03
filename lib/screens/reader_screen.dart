@@ -117,10 +117,26 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   void _precache(int index) {
     if (!_preload || !mounted) return;
-    for (final path in _pagesForIndex(index)) {
-      if (path.isNotEmpty) {
-        precacheImage(FileImage(File(path)), context).catchError((_) {});
-      }
+    final paths = _pagesForIndex(index);
+    for (var i = 0; i < paths.length; i++) {
+      final path = paths[i];
+      if (path.isEmpty) continue;
+      final pageNumber = _doublePage ? index * 2 + i + 1 : index + 1;
+      precacheImage(FileImage(File(path)), context).catchError((e, st) {
+        debugPrint('Failed to preload image at $path: $e');
+        debugPrintStack(stackTrace: st);
+        if (!mounted) return;
+        setState(() {
+          _preload = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.pageLoadFailed(page: pageNumber),
+            ),
+          ),
+        );
+      });
     }
   }
 
@@ -161,7 +177,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
     final db = DbHelper.instance;
     final related = await db.fetchBooks(
-        author: _book.author, unread: true, orderBy: 'title');
+      author: _book.author,
+      unread: true,
+      orderBy: 'title',
+    );
     BookModel? next;
     for (final b in related) {
       if (b.id != id) {
@@ -200,7 +219,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                      builder: (_) => ReaderScreen(book: random!)),
+                    builder: (_) => ReaderScreen(book: random!),
+                  ),
                 );
               },
               child: Text(AppLocalizations.of(context)!.randomUnread),
@@ -220,9 +240,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   Future<void> _openBookmarks() async {
     final page = await Navigator.push<int>(
       context,
-      MaterialPageRoute(
-        builder: (_) => BookmarksScreen(book: _book),
-      ),
+      MaterialPageRoute(builder: (_) => BookmarksScreen(book: _book)),
     );
     if (page != null && mounted) {
       final index = _doublePage ? (page / 2).floor() : page;
@@ -245,8 +263,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   Widget _buildPage(int index) {
     final pages = _pagesForIndex(index);
-    final fit =
-        _fitMode == FitMode.contain ? BoxFit.contain : BoxFit.fitWidth;
+    final fit = _fitMode == FitMode.contain ? BoxFit.contain : BoxFit.fitWidth;
     if (pages.length == 1) {
       return _ZoomableImage(
         path: pages.first,
@@ -283,30 +300,35 @@ class _ReaderScreenState extends State<ReaderScreen> {
               title: Text(_book.title),
               actions: [
                 IconButton(
-                  icon: Icon(_isRtl
-                      ? Icons.format_textdirection_r_to_l
-                      : Icons.format_textdirection_l_to_r),
+                  icon: Icon(
+                    _isRtl
+                        ? Icons.format_textdirection_r_to_l
+                        : Icons.format_textdirection_l_to_r,
+                  ),
                   onPressed: () => setState(() => _isRtl = !_isRtl),
                 ),
                 IconButton(
                   icon: Icon(
-                      _isBookmarked ? Icons.bookmark : Icons.bookmark_border),
+                    _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                  ),
                   onPressed: _toggleBookmark,
                 ),
                 IconButton(
                   icon: Icon(_doublePage ? Icons.filter_1 : Icons.filter_2),
                   onPressed: () => setState(() {
                     _doublePage = !_doublePage;
-                    final newPage =
-                        (_currentPage / (_doublePage ? 2 : 1)).floor();
+                    final newPage = (_currentPage / (_doublePage ? 2 : 1))
+                        .floor();
                     _controller = PageController(initialPage: newPage);
                     _currentPage = newPage;
                   }),
                 ),
                 IconButton(
-                  icon: Icon(_fitMode == FitMode.contain
-                      ? Icons.fit_screen
-                      : Icons.width_wide),
+                  icon: Icon(
+                    _fitMode == FitMode.contain
+                        ? Icons.fit_screen
+                        : Icons.width_wide,
+                  ),
                   tooltip: AppLocalizations.of(context)!.fitWidth,
                   onPressed: () => setState(() {
                     _fitMode = FitMode
