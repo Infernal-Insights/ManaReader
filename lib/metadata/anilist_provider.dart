@@ -50,7 +50,7 @@ class AniListProvider implements MetadataProvider {
     } catch (e, st) {
       debugPrint('AniListProvider search error: $e');
       debugPrintStack(stackTrace: st);
-      rethrow;
+      return null;
     }
   }
 }

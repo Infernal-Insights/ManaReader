@@ -176,6 +176,9 @@ class DbHelper {
   Future<int> importBook(String path, MetadataService service) async {
     final name = p.basenameWithoutExtension(path);
     final meta = await service.resolve(name);
+    if (meta == null) {
+      debugPrint('Metadata lookup failed for "$name"');
+    }
 
     final book = BookModel(
       title: meta?.title ?? name,
