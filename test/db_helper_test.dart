@@ -90,12 +90,17 @@ void main() {
       expect(fetched.tags, equals(['tag']));
     });
 
-    test('delete book', () async {
+    test('delete book removes files', () async {
+      final dir = Directory.systemTemp.createTempSync('mana_reader_book');
+      File('${dir.path}/page1.txt').writeAsStringSync('dummy');
       final id = await dbHelper.insertBook(
-          BookModel(title: 'Del', path: '/tmp/a.cbz', language: 'en'));
+          BookModel(title: 'Del', path: dir.path, language: 'en'));
+
       await dbHelper.deleteBook(id);
+
       final books = await dbHelper.fetchBooks();
       expect(books, isEmpty);
+      expect(await dir.exists(), isFalse);
     });
 
     test('fetchBooks with filters', () async {
