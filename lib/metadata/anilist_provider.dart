@@ -1,4 +1,6 @@
 import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'metadata_provider.dart';
@@ -45,8 +47,10 @@ class AniListProvider implements MetadataProvider {
           <String>[];
 
       return Metadata(title: title, language: lang, tags: tags);
-    } catch (_) {
-      return null;
+    } catch (e, st) {
+      debugPrint('AniListProvider search error: $e');
+      debugPrintStack(stackTrace: st);
+      rethrow;
     }
   }
 }
