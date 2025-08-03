@@ -29,6 +29,10 @@ class DbHelper {
     return openDatabase(
       path,
       version: 3,
+      onConfigure: (db) async {
+        // Ensure foreign key constraints are enforced
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE books(
@@ -47,14 +51,16 @@ class DbHelper {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             book_id INTEGER,
             page INTEGER,
-            timestamp INTEGER
+            timestamp INTEGER,
+            FOREIGN KEY(book_id) REFERENCES books(id) ON DELETE CASCADE
           )
         ''');
         await db.execute('''
           CREATE TABLE bookmarks(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             book_id INTEGER,
-            page INTEGER
+            page INTEGER,
+            FOREIGN KEY(book_id) REFERENCES books(id) ON DELETE CASCADE
           )
         ''');
       },
@@ -70,7 +76,8 @@ class DbHelper {
         }
         if (oldVersion < 3) {
           await db.execute(
-              'ALTER TABLE books ADD COLUMN favorite INTEGER DEFAULT 0');
+            'ALTER TABLE books ADD COLUMN favorite INTEGER DEFAULT 0',
+          );
         }
       },
     );
@@ -125,6 +132,10 @@ class DbHelper {
     } catch (_) {}
 
     final rows = await db.delete('books', where: 'id = ?', whereArgs: [id]);
+
+    // Clean up related history and bookmarks entries
+    await db.delete('history', where: 'book_id = ?', whereArgs: [id]);
+    await db.delete('bookmarks', where: 'book_id = ?', whereArgs: [id]);
 
     if (path != null) {
       final dir = Directory(path);
