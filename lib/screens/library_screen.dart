@@ -569,8 +569,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final path = await FilePicker.platform.getDirectoryPath();
     if (path == null) return;
     try {
-      await syncDirectoryPath(path);
+      final success = await syncDirectoryPath(path);
       if (mounted) _loadBooks();
+      if (!success && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.importPartialFailure,
+            ),
+          ),
+        );
+      }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(

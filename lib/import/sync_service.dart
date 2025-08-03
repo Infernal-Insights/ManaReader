@@ -1,15 +1,18 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../database/db_helper.dart';
 import 'importer.dart';
 
-/// Scans [dirPath] for supported archives and imports any that are not already present in the database.
-Future<void> syncDirectoryPath(String dirPath, {DbHelper? dbHelper}) async {
+/// Scans [dirPath] for supported archives and imports any that are not already
+/// present in the database. Returns `true` if all archives were imported
+/// successfully, or `false` if some failed.
+Future<bool> syncDirectoryPath(String dirPath, {DbHelper? dbHelper}) async {
   final directory = Directory(dirPath);
-  if (!await directory.exists()) return;
+  if (!await directory.exists()) return true;
 
   final db = dbHelper ?? DbHelper.instance;
   final books = await db.fetchBooks();
@@ -17,6 +20,8 @@ Future<void> syncDirectoryPath(String dirPath, {DbHelper? dbHelper}) async {
 
   final docs = await getApplicationDocumentsDirectory();
   final importer = Importer(dbHelper: db);
+
+  var allSuccess = true;
 
   await for (final entity in directory.list(recursive: true)) {
     if (entity is! File) continue;
@@ -34,8 +39,11 @@ Future<void> syncDirectoryPath(String dirPath, {DbHelper? dbHelper}) async {
     try {
       await importer.importPath(entity.path);
       existingPaths.add(destPath);
-    } catch (_) {
-      // Ignore individual import failures
+    } catch (e, st) {
+      debugPrint('Failed to import ${entity.path}: $e');
+      debugPrint('$st');
+      allSuccess = false;
     }
   }
+  return allSuccess;
 }

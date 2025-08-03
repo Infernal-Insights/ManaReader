@@ -193,7 +193,8 @@ void main() {
     File(p.join(tmp.path, 'e.pdf')).writeAsBytesSync(pdfData);
 
     final db = DbHelper();
-    await syncDirectoryPath(tmp.path, dbHelper: db);
+    final success = await syncDirectoryPath(tmp.path, dbHelper: db);
+    expect(success, isTrue);
     final books = await db.fetchBooks();
     expect(books, hasLength(5));
   });
