@@ -17,6 +17,7 @@
   "delete": "Delete",
   "edit": "Edit",
   "importFailed": "Import failed: {error}",
+  "importPartialFailure": "Some items failed to import",
   "bookmarks": "Bookmarks",
   "noBookmarks": "No bookmarks",
   "pageWithNumber": "Page {page}",
