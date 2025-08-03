@@ -139,6 +139,7 @@ void main() {
   group('ImporterFactory', () {
     test('selects importer based on extension', () {
       expect(ImporterFactory.fromPath('a.cbz'), isA<ZipImporter>());
+      expect(ImporterFactory.fromPath('a.7z'), isA<SevenZipImporter>());
       expect(ImporterFactory.fromPath('dir'), isA<FolderImporter>());
     });
   });
@@ -225,6 +226,36 @@ zipfile.ZipFile(archive).extractall(dest)
         ..addFile(ArchiveFile('d.png', img.length, img));
       final bytes = ZipEncoder().encode(archive)!;
       final sevenPath = p.join(tmp.path, 'd.cb7');
+      File(sevenPath).writeAsBytesSync(bytes);
+
+      final importer = SevenZipImporter();
+      final book = await importer.import(sevenPath);
+      expect(book.pages.length, 1);
+      expect(File(book.pages.first).existsSync(), isTrue);
+    });
+
+    test('SevenZipImporter extracts images from .7z files', () async {
+      final sevenScript = File('/usr/local/bin/7z');
+      if (!sevenScript.existsSync()) {
+        sevenScript
+          ..writeAsStringSync('''#!/usr/bin/env python3
+import sys, zipfile, os
+args=sys.argv[1:]
+archive=args[1]
+dest=args[2]
+if dest.startswith("-o"):
+    dest=dest[2:]
+zipfile.ZipFile(archive).extractall(dest)
+''')
+          ..chmodSync(0o755);
+      }
+
+      final tmp = Directory.systemTemp.createTempSync();
+      final img = base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=');
+      final archive = Archive()
+        ..addFile(ArchiveFile('e.png', img.length, img));
+      final bytes = ZipEncoder().encode(archive)!;
+      final sevenPath = p.join(tmp.path, 'e.7z');
       File(sevenPath).writeAsBytesSync(bytes);
 
       final importer = SevenZipImporter();

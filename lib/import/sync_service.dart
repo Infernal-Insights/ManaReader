@@ -24,6 +24,7 @@ Future<void> syncDirectoryPath(String dirPath, {DbHelper? dbHelper}) async {
     if (!(lower.endsWith('.cbz') ||
         lower.endsWith('.cbr') ||
         lower.endsWith('.cb7') ||
+        lower.endsWith('.7z') ||
         lower.endsWith('.pdf'))) {
       continue;
     }
