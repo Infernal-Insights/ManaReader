@@ -31,7 +31,7 @@ class DoujinDbProvider implements MetadataProvider {
     } catch (e, st) {
       debugPrint('DoujinDbProvider search error: $e');
       debugPrintStack(stackTrace: st);
-      rethrow;
+      return null;
     }
   }
 }

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../database/db_helper.dart';
 import '../importers/importer_factory.dart';
 import '../models/book_model.dart';
@@ -17,6 +19,9 @@ class Importer {
     final book = await inner.import(path);
 
     final meta = await _metadata.resolve(book.title);
+    if (meta == null) {
+      debugPrint('Metadata lookup failed for "${book.title}"');
+    }
     final merged = BookModel(
       title: meta?.title ?? book.title,
       path: book.path,
