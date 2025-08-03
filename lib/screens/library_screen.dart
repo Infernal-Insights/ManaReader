@@ -76,14 +76,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Future<void> _initFilters() async {
-    final tags = await DbHelper.instance.fetchAllTags();
-    final authors = await DbHelper.instance.fetchAllAuthors();
-    final languages = await DbHelper.instance.fetchAllLanguages();
+    final results = await Future.wait<List<String>>([
+      DbHelper.instance.fetchAllTags(),
+      DbHelper.instance.fetchAllAuthors(),
+      DbHelper.instance.fetchAllLanguages(),
+    ]);
     if (!mounted) return;
     setState(() {
-      _tags = tags;
-      _authors = authors;
-      _languages = languages;
+      _tags = results[0];
+      _authors = results[1];
+      _languages = results[2];
     });
   }
 
