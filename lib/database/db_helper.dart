@@ -28,7 +28,7 @@ class DbHelper {
     final path = p.join(documentsDir.path, 'mana_reader.db');
     return openDatabase(
       path,
-      version: 3,
+      version: 4,
       onConfigure: (db) async {
         // Ensure foreign key constraints are enforced
         await db.execute('PRAGMA foreign_keys = ON');
@@ -63,6 +63,10 @@ class DbHelper {
             FOREIGN KEY(book_id) REFERENCES books(id) ON DELETE CASCADE
           )
         ''');
+        await db.execute('CREATE INDEX idx_books_author ON books(author);');
+        await db.execute('CREATE INDEX idx_books_language ON books(language);');
+        await db.execute('CREATE INDEX idx_books_title ON books(title);');
+        await db.execute('CREATE INDEX idx_books_favorite ON books(favorite);');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -77,6 +81,16 @@ class DbHelper {
         if (oldVersion < 3) {
           await db.execute(
             'ALTER TABLE books ADD COLUMN favorite INTEGER DEFAULT 0',
+          );
+        }
+        if (oldVersion < 4) {
+          await db.execute('CREATE INDEX idx_books_author ON books(author);');
+          await db.execute(
+            'CREATE INDEX idx_books_language ON books(language);',
+          );
+          await db.execute('CREATE INDEX idx_books_title ON books(title);');
+          await db.execute(
+            'CREATE INDEX idx_books_favorite ON books(favorite);',
           );
         }
       },
