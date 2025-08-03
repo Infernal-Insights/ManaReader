@@ -527,12 +527,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
     if (confirm == true) {
       await DbHelper.instance.deleteBook(book.id!);
-      try {
-        final dir = Directory(book.path);
-        if (await dir.exists()) {
-          await dir.delete(recursive: true);
-        }
-      } catch (_) {}
       if (mounted) _loadBooks();
     }
   }
