@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -143,7 +144,11 @@ class DbHelper {
       if (result.isNotEmpty) {
         path = result.first['path'] as String?;
       }
-    } catch (_) {}
+    } on DatabaseException catch (e, st) {
+      debugPrint('Failed to fetch book path for id $id: $e');
+      debugPrintStack(stackTrace: st);
+      rethrow;
+    }
 
     final rows = await db.delete('books', where: 'id = ?', whereArgs: [id]);
 
@@ -157,7 +162,11 @@ class DbHelper {
         if (await dir.exists()) {
           await dir.delete(recursive: true);
         }
-      } catch (_) {}
+      } on FileSystemException catch (e, st) {
+        debugPrint('Failed to delete directory at $path: $e');
+        debugPrintStack(stackTrace: st);
+        return -1;
+      }
     }
 
     return rows;
