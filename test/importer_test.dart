@@ -29,21 +29,23 @@ class _FakePdfRenderPlatform extends PdfRenderPlatform {
   Future<PdfDocument> openData(Uint8List data) async => _FakePdfDocument();
 
   @override
-  Future<PdfPageImageTexture> createTexture(
-          {required FutureOr<PdfDocument> pdfDocument, required int pageNumber}) =>
-      throw UnimplementedError();
+  Future<PdfPageImageTexture> createTexture({
+    required FutureOr<PdfDocument> pdfDocument,
+    required int pageNumber,
+  }) => throw UnimplementedError();
 }
 
 class _FakePdfDocument extends PdfDocument {
   _FakePdfDocument()
-      : super(
-            sourceName: 'fake.pdf',
-            pageCount: 1,
-            verMajor: 1,
-            verMinor: 7,
-            isEncrypted: false,
-            allowsCopying: true,
-            allowsPrinting: true);
+    : super(
+        sourceName: 'fake.pdf',
+        pageCount: 1,
+        verMajor: 1,
+        verMinor: 7,
+        isEncrypted: false,
+        allowsCopying: true,
+        allowsPrinting: true,
+      );
 
   @override
   Future<void> dispose() async {}
@@ -61,7 +63,7 @@ class _FakePdfDocument extends PdfDocument {
 
 class _FakePdfPage extends PdfPage {
   _FakePdfPage(PdfDocument doc, int num)
-      : super(document: doc, pageNumber: num, width: 1, height: 1);
+    : super(document: doc, pageNumber: num, width: 1, height: 1);
 
   @override
   Future<PdfPageImage> render({
@@ -82,17 +84,18 @@ class _FakePdfPage extends PdfPage {
 
 class _FakePdfPageImage extends PdfPageImage {
   _FakePdfPageImage(int page)
-      : _pixels = Uint8List.fromList(const [255, 0, 0, 255]),
-        super(
-            pageNumber: page,
-            x: 0,
-            y: 0,
-            width: 1,
-            height: 1,
-            fullWidth: 1,
-            fullHeight: 1,
-            pageWidth: 1,
-            pageHeight: 1);
+    : _pixels = Uint8List.fromList(const [255, 0, 0, 255]),
+      super(
+        pageNumber: page,
+        x: 0,
+        y: 0,
+        width: 1,
+        height: 1,
+        fullWidth: 1,
+        fullHeight: 1,
+        pageWidth: 1,
+        pageHeight: 1,
+      );
 
   final Uint8List _pixels;
   ui.Image? _image;
@@ -114,7 +117,12 @@ class _FakePdfPageImage extends PdfPageImage {
     if (_image != null) return _image!;
     final comp = Completer<ui.Image>();
     ui.decodeImageFromPixels(
-        _pixels, 1, 1, ui.PixelFormat.rgba8888, (img) => comp.complete(img));
+      _pixels,
+      1,
+      1,
+      ui.PixelFormat.rgba8888,
+      (img) => comp.complete(img),
+    );
     _image = await comp.future;
     return _image!;
   }
@@ -124,9 +132,10 @@ class _FakePdfPageImage extends PdfPageImage {
       await createImageIfNotAvailable();
 }
 
-
 class _FakePathProviderPlatform extends PathProviderPlatform {
-  final Directory tempDir = Directory.systemTemp.createTempSync('mana_reader_test');
+  final Directory tempDir = Directory.systemTemp.createTempSync(
+    'mana_reader_test',
+  );
 
   @override
   Future<String?> getApplicationDocumentsPath() async => tempDir.path;
@@ -147,7 +156,9 @@ void main() {
   group('Importers', () {
     test('FolderImporter reads images', () async {
       final dir = Directory.systemTemp.createTempSync();
-      final img = base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=');
+      final img = base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=',
+      );
       final imgPath = p.join(dir.path, 'a.png');
       File(imgPath).writeAsBytesSync(img);
 
@@ -159,9 +170,10 @@ void main() {
 
     test('ZipImporter extracts images', () async {
       final tmp = Directory.systemTemp.createTempSync();
-      final img = base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=');
-      final archive = Archive()
-        ..addFile(ArchiveFile('b.png', img.length, img));
+      final img = base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=',
+      );
+      final archive = Archive()..addFile(ArchiveFile('b.png', img.length, img));
       final bytes = ZipEncoder().encode(archive)!;
       final zipPath = p.join(tmp.path, 'b.cbz');
       File(zipPath).writeAsBytesSync(bytes);
@@ -176,12 +188,15 @@ void main() {
       const channel = MethodChannel('com.lkrjangid.rar');
       channel.setMockMethodCallHandler((call) async {
         if (call.method == 'extractRarFile') {
-          final bytes = File(call.arguments['rarFilePath'] as String).readAsBytesSync();
+          final bytes = File(
+            call.arguments['rarFilePath'] as String,
+          ).readAsBytesSync();
           final archive = ZipDecoder().decodeBytes(bytes);
           final dest = call.arguments['destinationPath'] as String;
           for (final f in archive) {
             if (f.isFile) {
-              final out = File(p.join(dest, f.name))..createSync(recursive: true);
+              final out = File(p.join(dest, f.name))
+                ..createSync(recursive: true);
               out.writeAsBytesSync(f.content as List<int>);
             }
           }
@@ -191,9 +206,10 @@ void main() {
       });
 
       final tmp = Directory.systemTemp.createTempSync();
-      final img = base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=');
-      final archive = Archive()
-        ..addFile(ArchiveFile('c.png', img.length, img));
+      final img = base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=',
+      );
+      final archive = Archive()..addFile(ArchiveFile('c.png', img.length, img));
       final bytes = ZipEncoder().encode(archive)!;
       final rarPath = p.join(tmp.path, 'c.cbr');
       File(rarPath).writeAsBytesSync(bytes);
@@ -217,13 +233,14 @@ if dest.startswith("-o"):
     dest=dest[2:]
 zipfile.ZipFile(archive).extractall(dest)
 ''')
-          ..chmodSync(0o755);
+          ..chmodSync(0x1ED);
       }
 
       final tmp = Directory.systemTemp.createTempSync();
-      final img = base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=');
-      final archive = Archive()
-        ..addFile(ArchiveFile('d.png', img.length, img));
+      final img = base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=',
+      );
+      final archive = Archive()..addFile(ArchiveFile('d.png', img.length, img));
       final bytes = ZipEncoder().encode(archive)!;
       final sevenPath = p.join(tmp.path, 'd.cb7');
       File(sevenPath).writeAsBytesSync(bytes);
@@ -247,13 +264,14 @@ if dest.startswith("-o"):
     dest=dest[2:]
 zipfile.ZipFile(archive).extractall(dest)
 ''')
-          ..chmodSync(0o755);
+          ..chmodSync(0x1ED);
       }
 
       final tmp = Directory.systemTemp.createTempSync();
-      final img = base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=');
-      final archive = Archive()
-        ..addFile(ArchiveFile('e.png', img.length, img));
+      final img = base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=',
+      );
+      final archive = Archive()..addFile(ArchiveFile('e.png', img.length, img));
       final bytes = ZipEncoder().encode(archive)!;
       final sevenPath = p.join(tmp.path, 'e.7z');
       File(sevenPath).writeAsBytesSync(bytes);
@@ -267,7 +285,9 @@ zipfile.ZipFile(archive).extractall(dest)
     test('PdfImporter renders pages', () async {
       PdfRenderPlatform.instance = _FakePdfRenderPlatform();
       final tmp = Directory.systemTemp.createTempSync();
-      final pdfData = base64Decode('JVBERi0xLjEKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBvYmo8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iagozIDAgb2JqPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9NZWRpYUJveFswIDAgNjEyIDc5Ml0+PmVuZG9iagp0cmFpbGVyPDwvUm9vdCAxIDAgUi9TaXplIDQ+PgolJUVPRg==');
+      final pdfData = base64Decode(
+        'JVBERi0xLjEKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBvYmo8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iagozIDAgb2JqPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9NZWRpYUJveFswIDAgNjEyIDc5Ml0+PmVuZG9iagp0cmFpbGVyPDwvUm9vdCAxIDAgUi9TaXplIDQ+PgolJUVPRg==',
+      );
       final pdfPath = p.join(tmp.path, 'a.pdf');
       File(pdfPath).writeAsBytesSync(pdfData);
 
