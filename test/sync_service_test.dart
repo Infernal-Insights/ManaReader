@@ -187,13 +187,14 @@ void main() {
     File(p.join(tmp.path, 'a.cbz')).writeAsBytesSync(zipBytes);
     File(p.join(tmp.path, 'b.cbr')).writeAsBytesSync(zipBytes);
     File(p.join(tmp.path, 'c.cb7')).writeAsBytesSync(zipBytes);
+    File(p.join(tmp.path, 'd.7z')).writeAsBytesSync(zipBytes);
 
     final pdfData = base64Decode('JVBERi0xLjEKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBvYmo8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iagozIDAgb2JqPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9NZWRpYUJveFswIDAgNjEyIDc5Ml0+PmVuZG9iagp0cmFpbGVyPDwvUm9vdCAxIDAgUi9TaXplIDQ+PgolJUVPRg==');
-    File(p.join(tmp.path, 'd.pdf')).writeAsBytesSync(pdfData);
+    File(p.join(tmp.path, 'e.pdf')).writeAsBytesSync(pdfData);
 
     final db = DbHelper();
     await syncDirectoryPath(tmp.path, dbHelper: db);
     final books = await db.fetchBooks();
-    expect(books, hasLength(4));
+    expect(books, hasLength(5));
   });
 }

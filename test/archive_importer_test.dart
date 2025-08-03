@@ -199,6 +199,44 @@ void main() {
       expect(File(book.pages.first).existsSync(), isTrue);
     });
 
+    test('SevenZipImporter extracts images from .7z using mocked Process.run',
+        () async {
+      processRun = (String exe, List<String> args) async {
+        if (exe == 'which' || exe == 'where') {
+          return ProcessResult(0, 0, '', '');
+        }
+        if (exe == '7z') {
+          final archivePath = args[1];
+          var destArg = args[2];
+          if (destArg.startsWith('-o')) {
+            destArg = destArg.substring(2);
+          }
+          final bytes = File(archivePath).readAsBytesSync();
+          final archive = ZipDecoder().decodeBytes(bytes);
+          for (final f in archive) {
+            if (f.isFile) {
+              final out = File(p.join(destArg, f.name))..createSync(recursive: true);
+              out.writeAsBytesSync(f.content as List<int>);
+            }
+          }
+          return ProcessResult(0, 0, '', '');
+        }
+        throw UnsupportedError(exe);
+      };
+
+      final tmp = Directory.systemTemp.createTempSync();
+      final img = base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAA C0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=');
+      final archive = Archive()..addFile(ArchiveFile('c.png', img.length, img));
+      final bytes = ZipEncoder().encode(archive)!;
+      final sevenPath = p.join(tmp.path, 't.7z');
+      File(sevenPath).writeAsBytesSync(bytes);
+
+      final importer = SevenZipImporter();
+      final book = await importer.import(sevenPath);
+      expect(book.pages.length, 1);
+      expect(File(book.pages.first).existsSync(), isTrue);
+    });
+
     test('PdfImporter renders pages from small PDF', () async {
       PdfRenderPlatform.instance = _FakePdfRenderPlatform();
       final tmp = Directory.systemTemp.createTempSync();
