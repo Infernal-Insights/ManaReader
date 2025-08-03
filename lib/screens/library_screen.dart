@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../database/db_helper.dart';
@@ -115,7 +116,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
           .toList();
       files.sort();
       return files.isNotEmpty ? files.first : null;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Failed to load thumbnail for ${book.path}: $e');
       return null;
     }
   }
@@ -229,6 +231,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                 child: const CircularProgressIndicator(),
                               );
                             }
+                            if (snap.hasError) {
+                              return Container(
+                                color: Colors.grey.shade800,
+                                alignment: Alignment.center,
+                                child: const Icon(Icons.broken_image, size: 48),
+                              );
+                            }
                             final path = snap.data;
                             if (path != null) {
                               return Image.file(File(path), fit: BoxFit.cover);
@@ -236,7 +245,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                             return Container(
                               color: Colors.grey.shade800,
                               alignment: Alignment.center,
-                              child: const Icon(Icons.book, size: 48),
+                              child: const Icon(Icons.image_not_supported, size: 48),
                             );
                           },
                         ),
