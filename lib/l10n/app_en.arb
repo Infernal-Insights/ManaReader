@@ -32,5 +32,6 @@
   "tagsCommaSeparated": "Tags (comma separated)",
   "fitWidth": "Fit Width",
   "clear": "Clear",
+  "pageLoadFailed": "Failed to load page {page}",
   "continueReading": "Continue Reading"
 }
