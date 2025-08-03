@@ -119,7 +119,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
     if (!_preload || !mounted) return;
     for (final path in _pagesForIndex(index)) {
       if (path.isNotEmpty) {
-        precacheImage(FileImage(File(path)), context);
+        precacheImage(FileImage(File(path)), context).catchError((_) {});
       }
     }
   }
@@ -233,18 +233,44 @@ class _ReaderScreenState extends State<ReaderScreen> {
     }
   }
 
+  void _onImageError(int index) {
+    if (!mounted) return;
+    if (_currentPage == index) {
+      _controller.nextPage(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
   Widget _buildPage(int index) {
     final pages = _pagesForIndex(index);
     final fit =
         _fitMode == FitMode.contain ? BoxFit.contain : BoxFit.fitWidth;
     if (pages.length == 1) {
-      return _ZoomableImage(path: pages.first, fit: fit);
+      return _ZoomableImage(
+        path: pages.first,
+        fit: fit,
+        onError: () => _onImageError(index),
+      );
     }
     return Row(
       children: [
-        Expanded(child: _ZoomableImage(path: pages[0], fit: fit)),
+        Expanded(
+          child: _ZoomableImage(
+            path: pages[0],
+            fit: fit,
+            onError: () => _onImageError(index),
+          ),
+        ),
         if (pages.length > 1)
-          Expanded(child: _ZoomableImage(path: pages[1], fit: fit)),
+          Expanded(
+            child: _ZoomableImage(
+              path: pages[1],
+              fit: fit,
+              onError: () => _onImageError(index),
+            ),
+          ),
       ],
     );
   }
@@ -371,7 +397,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
 class _ZoomableImage extends StatefulWidget {
   final String path;
   final BoxFit fit;
-  const _ZoomableImage({required this.path, required this.fit});
+  final VoidCallback? onError;
+  const _ZoomableImage({required this.path, required this.fit, this.onError});
 
   @override
   State<_ZoomableImage> createState() => _ZoomableImageState();
@@ -403,7 +430,16 @@ class _ZoomableImageState extends State<_ZoomableImage> {
       onDoubleTap: _handleDoubleTap,
       child: InteractiveViewer(
         transformationController: _controller,
-        child: Image.file(File(widget.path), fit: widget.fit),
+        child: Image.file(
+          File(widget.path),
+          fit: widget.fit,
+          errorBuilder: (_, __, ___) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              widget.onError?.call();
+            });
+            return const SizedBox.shrink();
+          },
+        ),
       ),
     );
   }
