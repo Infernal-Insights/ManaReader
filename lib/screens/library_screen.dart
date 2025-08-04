@@ -524,7 +524,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       builder: (_) => AlertDialog(
         title: Text(AppLocalizations.of(context)!.deleteBook),
         content: Text(
-            AppLocalizations.of(context)!.deleteConfirm(title: book.title)),
+            AppLocalizations.of(context)!.deleteConfirm(book.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -568,7 +568,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         ).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context)!.importFailed(error: e.toString()),
+              AppLocalizations.of(context)!.importFailed(e.toString()),
             ),
           ),
         );
@@ -598,7 +598,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         ).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context)!.importFailed(error: e.toString()),
+              AppLocalizations.of(context)!.importFailed(e.toString()),
             ),
           ),
         );
