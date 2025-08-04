@@ -342,4 +342,10 @@ class DbHelper {
     );
     return maps.map((e) => e['page'] as int).toList();
   }
+
+  /// Closes the underlying database and resets the instance.
+  Future<void> close() async {
+    await _db?.close();
+    _db = null;
+  }
 }
