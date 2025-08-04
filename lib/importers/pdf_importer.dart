@@ -25,10 +25,10 @@ class PdfImporter extends Importer {
       final imagePath = p.join(destDir.path, '${i.toString().padLeft(4, '0')}.png');
       final file = File(imagePath);
       await file.writeAsBytes(bytes);
-      await page.close();
+      await page.dispose();
       pages.add(imagePath);
     }
-    await doc.close();
+    await doc.dispose();
     return BookModel(
       title: baseName,
       path: destDir.path,
