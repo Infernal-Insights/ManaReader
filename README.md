@@ -29,6 +29,10 @@ From the repository root run `flutter run` and select an Android emulator, physi
 
 Icon images have been removed from version control. During development you can generate them with `flutter create --platforms=<platform>` or tools like `flutter_launcher_icons`. Large binary assets should be stored using Git LFS, which is configured for common image formats in this repository.
 
+## Sample Book
+
+A small three-page dummy book is available at `assets/sample_books/dummy_story.pdf`. Use the app's import feature to load it and verify reading and library management behaviour.
+
 ## Platform Icons
 
 Platform icon files are not stored in this repository. Generate them locally with `flutter create .` or copy your own icons into the platform asset folders before building. If you wish to keep custom icons under version control, add them via Git LFS so only optimized binaries are tracked.
