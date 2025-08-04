@@ -12,6 +12,7 @@ import '../import/sync_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'book_detail_screen.dart';
 import 'history_screen.dart';
 import 'reader_screen.dart';
@@ -26,8 +27,7 @@ class LibraryScreen extends StatefulWidget {
     bool? favorite,
     String? query,
     String? orderBy,
-  })?
-  fetchBooks;
+  })? fetchBooks;
 
   const LibraryScreen({super.key, this.fetchBooks});
 
@@ -248,7 +248,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
                             return Container(
                               color: Colors.grey.shade800,
                               alignment: Alignment.center,
-                              child: const Icon(Icons.image_not_supported, size: 48),
+                              child: const Icon(Icons.image_not_supported,
+                                  size: 48),
                             );
                           },
                         ),
@@ -392,7 +393,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
           return Column(
             children: [
-              if (_tags.isNotEmpty || _authors.isNotEmpty || _languages.isNotEmpty)
+              if (_tags.isNotEmpty ||
+                  _authors.isNotEmpty ||
+                  _languages.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Wrap(
@@ -495,8 +498,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           ),
                           Text(AppLocalizations.of(context)!.unread),
                           IconButton(
-                            icon: Icon(
-                                _showFavorites ? Icons.star : Icons.star_border),
+                            icon: Icon(_showFavorites
+                                ? Icons.star
+                                : Icons.star_border),
                             onPressed: () {
                               setState(() => _showFavorites = !_showFavorites);
                               _loadBooks();
@@ -524,8 +528,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: Text(AppLocalizations.of(context)!.deleteBook),
-        content: Text(
-            AppLocalizations.of(context)!.deleteConfirm(book.title)),
+        content: Text(AppLocalizations.of(context)!.deleteConfirm(book.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -553,8 +556,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
     if (mounted) _loadBooks();
   }
 
+  Future<bool> _requestStoragePermission() async {
+    var status = await Permission.storage.request();
+    if (status.isGranted) return true;
+    status = await Permission.photos.request();
+    if (status.isGranted) return true;
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Storage permission denied')),
+      );
+    }
+    return false;
+  }
+
   Future<void> _pickAndImport() async {
     if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+      if (!await _requestStoragePermission()) return;
       final result = await FilePicker.platform.pickFiles();
       if (result == null || result.files.isEmpty) return;
       final path = result.files.single.path;
@@ -589,6 +606,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   Future<void> _syncDirectory() async {
     if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+      if (!await _requestStoragePermission()) return;
       final path = await FilePicker.platform.getDirectoryPath();
       if (path == null) return;
       try {
