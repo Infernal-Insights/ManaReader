@@ -12,6 +12,7 @@ jobs:
         with:
           channel: stable
           cache: true
+      - run: flutter config --no-enable-linux-desktop --no-enable-macos-desktop --no-enable-windows-desktop
       - run: flutter pub get
       - run: dart format --set-exit-if-changed .
       - run: flutter analyze
