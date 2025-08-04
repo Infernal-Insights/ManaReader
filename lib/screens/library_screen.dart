@@ -13,6 +13,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'book_detail_screen.dart';
 import 'history_screen.dart';
+import 'reader_screen.dart';
 
 /// Displays the list of imported books.
 class LibraryScreen extends StatefulWidget {
