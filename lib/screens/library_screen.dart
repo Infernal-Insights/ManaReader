@@ -21,6 +21,7 @@ class LibraryScreen extends StatefulWidget {
     String? author,
     String? language,
     bool? unread,
+    bool? favorite,
     String? query,
     String? orderBy,
   })?
