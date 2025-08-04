@@ -132,7 +132,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context)!.pageLoadFailed(page: pageNumber),
+              AppLocalizations.of(context)!.pageLoadFailed(pageNumber),
             ),
           ),
         );
