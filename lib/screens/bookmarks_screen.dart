@@ -24,14 +24,17 @@ class BookmarksScreen extends StatelessWidget {
                 }
                 final pages = snapshot.data!;
                 if (pages.isEmpty) {
-                  return Center(child: Text(AppLocalizations.of(context)!.noBookmarks));
+                  return Center(
+                      child: Text(AppLocalizations.of(context)!.noBookmarks));
                 }
                 return ListView.builder(
                   itemCount: pages.length,
                   itemBuilder: (context, index) {
                     final p = pages[index];
                     return ListTile(
-                      title: Text(AppLocalizations.of(context)!.pageWithNumber(page: p + 1)),
+                      title: Text(
+                        AppLocalizations.of(context)!.pageWithNumber(p + 1),
+                      ),
                       onTap: () => Navigator.pop(context, p),
                     );
                   },
