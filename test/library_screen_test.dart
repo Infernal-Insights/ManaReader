@@ -31,7 +31,7 @@ void main() {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: LibraryScreen(
-        fetchBooks: ({tags, author, language, unread, query, orderBy}) async => [],
+        fetchBooks: ({tags, author, language, unread, favorite, query, orderBy}) async => [],
       ),
     ));
     await tester.pump();
@@ -46,7 +46,7 @@ void main() {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: LibraryScreen(
-        fetchBooks: ({tags, author, language, unread, query, orderBy}) async => books,
+        fetchBooks: ({tags, author, language, unread, favorite, query, orderBy}) async => books,
       ),
     ));
     await tester.pump();
@@ -62,7 +62,7 @@ void main() {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: LibraryScreen(
-          fetchBooks: ({tags, author, language, unread, query, orderBy}) async => books),
+          fetchBooks: ({tags, author, language, unread, favorite, query, orderBy}) async => books),
     ));
     await tester.pumpAndSettle();
 
@@ -81,7 +81,7 @@ void main() {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: LibraryScreen(
-          fetchBooks: ({tags, author, language, unread, query, orderBy}) async => books),
+          fetchBooks: ({tags, author, language, unread, favorite, query, orderBy}) async => books),
     ));
     await tester.pumpAndSettle();
 
@@ -96,7 +96,7 @@ void main() {
     ];
     await tester.pumpWidget(MaterialApp(
       home: LibraryScreen(
-          fetchBooks: ({tags, author, language, unread, query, orderBy}) async => books),
+          fetchBooks: ({tags, author, language, unread, favorite, query, orderBy}) async => books),
     ));
     await tester.pumpAndSettle();
 
@@ -126,7 +126,7 @@ void main() {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: LibraryScreen(
-        fetchBooks: ({tags, author, language, unread, query, orderBy}) async {
+        fetchBooks: ({tags, author, language, unread, favorite, query, orderBy}) async {
           return books.where((b) => language == null || b.language == language).toList();
         },
       ),
@@ -151,7 +151,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: LibraryScreen(fetchBooks: ({favorite, tags, author, language, unread, query, orderBy}) async {
+      home: LibraryScreen(fetchBooks: ({tags, author, language, unread, favorite, query, orderBy}) async {
         receivedFavorite = favorite;
         return books;
       }),
@@ -186,7 +186,7 @@ void main() {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: LibraryScreen(
-        fetchBooks: ({tags, author, language, unread, query, orderBy}) async {
+        fetchBooks: ({tags, author, language, unread, favorite, query, orderBy}) async {
           return books.where((b) {
             if (tags != null && tags.isNotEmpty) {
               for (final t in tags) {
