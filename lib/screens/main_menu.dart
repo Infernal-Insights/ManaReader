@@ -55,7 +55,7 @@ class MainMenu extends StatelessWidget {
                 ElevatedButton(
                   onPressed: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const HistoryScreen()),
+                    MaterialPageRoute(builder: (_) => HistoryScreen()),
                   ),
                   child: Text(AppLocalizations.of(context)!.history),
                 ),

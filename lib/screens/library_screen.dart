@@ -50,7 +50,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   void _openHistory() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const HistoryScreen()),
+      MaterialPageRoute(builder: (_) => HistoryScreen()),
     );
   }
 
