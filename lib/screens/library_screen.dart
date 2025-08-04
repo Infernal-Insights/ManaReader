@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -553,23 +554,33 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Future<void> _pickAndImport() async {
-    final result = await FilePicker.platform.pickFiles();
-    if (result == null || result.files.isEmpty) return;
-    final path = result.files.single.path;
-    if (path == null) return;
-    try {
-      final importer = Importer();
-      await importer.importPath(path);
-      _loadBooks();
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.importFailed(e.toString()),
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+      final result = await FilePicker.platform.pickFiles();
+      if (result == null || result.files.isEmpty) return;
+      final path = result.files.single.path;
+      if (path == null) return;
+      try {
+        final importer = Importer();
+        await importer.importPath(path);
+        _loadBooks();
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.importFailed(e.toString()),
+              ),
             ),
+          );
+        }
+      }
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Not supported on this platform'),
           ),
         );
       }
@@ -577,29 +588,39 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Future<void> _syncDirectory() async {
-    final path = await FilePicker.platform.getDirectoryPath();
-    if (path == null) return;
-    try {
-      final success = await syncDirectoryPath(path);
-      if (mounted) _loadBooks();
-      if (!success && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.importPartialFailure,
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+      final path = await FilePicker.platform.getDirectoryPath();
+      if (path == null) return;
+      try {
+        final success = await syncDirectoryPath(path);
+        if (mounted) _loadBooks();
+        if (!success && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.importPartialFailure,
+              ),
             ),
-          ),
-        );
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.importFailed(e.toString()),
+              ),
+            ),
+          );
+        }
       }
-    } catch (e) {
+    } else {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.importFailed(e.toString()),
-            ),
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Not supported on this platform'),
           ),
         );
       }
