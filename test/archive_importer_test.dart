@@ -11,6 +11,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:archive/archive.dart';
 import 'package:pdf_render/pdf_render.dart';
+import 'package:pdf_render_platform_interface/pdf_render_platform_interface.dart';
 
 import 'package:mana_reader/importers/rar_importer.dart';
 import 'package:mana_reader/importers/seven_zip_importer.dart';

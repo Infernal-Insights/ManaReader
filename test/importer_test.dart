@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
@@ -13,6 +14,7 @@ import 'package:mana_reader/importers/rar_importer.dart';
 import 'package:mana_reader/importers/seven_zip_importer.dart';
 import 'package:mana_reader/importers/pdf_importer.dart';
 import 'package:pdf_render/pdf_render.dart';
+import 'package:pdf_render_platform_interface/pdf_render_platform_interface.dart';
 import 'dart:typed_data';
 import 'dart:ffi';
 import 'dart:ui' as ui;
@@ -223,8 +225,7 @@ void main() {
     test('SevenZipImporter extracts images', () async {
       final sevenScript = File('/usr/local/bin/7z');
       if (!sevenScript.existsSync()) {
-        sevenScript
-          ..writeAsStringSync('''#!/usr/bin/env python3
+        sevenScript.writeAsStringSync('''#!/usr/bin/env python3
 import sys, zipfile, os
 args=sys.argv[1:]
 archive=args[1]
@@ -232,8 +233,8 @@ dest=args[2]
 if dest.startswith("-o"):
     dest=dest[2:]
 zipfile.ZipFile(archive).extractall(dest)
-''')
-          ..chmodSync(0x1ED);
+''');
+        await Process.run('chmod', ['755', sevenScript.path]);
       }
 
       final tmp = Directory.systemTemp.createTempSync();
@@ -254,8 +255,7 @@ zipfile.ZipFile(archive).extractall(dest)
     test('SevenZipImporter extracts images from .7z files', () async {
       final sevenScript = File('/usr/local/bin/7z');
       if (!sevenScript.existsSync()) {
-        sevenScript
-          ..writeAsStringSync('''#!/usr/bin/env python3
+        sevenScript.writeAsStringSync('''#!/usr/bin/env python3
 import sys, zipfile, os
 args=sys.argv[1:]
 archive=args[1]
@@ -263,8 +263,8 @@ dest=args[2]
 if dest.startswith("-o"):
     dest=dest[2:]
 zipfile.ZipFile(archive).extractall(dest)
-''')
-          ..chmodSync(0x1ED);
+''');
+        await Process.run('chmod', ['755', sevenScript.path]);
       }
 
       final tmp = Directory.systemTemp.createTempSync();
