@@ -142,11 +142,24 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   Future<void> _loadPages() async {
     final dir = Directory(_book.path);
-    final pages = await dir
-        .list(recursive: true)
-        .where((e) => e is File && _isImage(e.path))
-        .map((e) => e.path)
-        .toList();
+    late final List<String> pages;
+    try {
+      pages = await dir
+          .list(recursive: true)
+          .where((e) => e is File && _isImage(e.path))
+          .map((e) => e.path)
+          .toList();
+    } catch (e, st) {
+      debugPrint('Failed to read pages from ${_book.path}: $e');
+      debugPrintStack(stackTrace: st);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to load pages'),
+        ),
+      );
+      return;
+    }
     pages.sort();
     if (!mounted) return;
     setState(() {
