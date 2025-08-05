@@ -57,7 +57,7 @@ class _FakePdfDocument extends PdfDocument {
       _FakePdfPage(this, pageNumber);
 
   @override
-  bool operator ==(dynamic other) => identical(this, other);
+  bool operator ==(Object other) => identical(this, other);
 
   @override
   int get hashCode => super.hashCode;
