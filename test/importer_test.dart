@@ -14,7 +14,7 @@ import 'package:mana_reader/importers/rar_importer.dart';
 import 'package:mana_reader/importers/seven_zip_importer.dart';
 import 'package:mana_reader/importers/pdf_importer.dart';
 import 'package:pdf_render/pdf_render.dart';
-import 'package:pdf_render_platform_interface/pdf_render_platform_interface.dart';
+import 'package:pdf_render/src/interfaces/pdf_render_platform_interface.dart';
 import 'dart:typed_data';
 import 'dart:ffi';
 import 'dart:ui' as ui;
