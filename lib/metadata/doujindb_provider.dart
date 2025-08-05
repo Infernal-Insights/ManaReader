@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -7,6 +8,12 @@ import 'metadata_provider.dart';
 
 /// Queries the DoujinDB REST API for doujin metadata.
 class DoujinDbProvider implements MetadataProvider {
+  DoujinDbProvider({http.Client? client, this.timeout = const Duration(seconds: 5)})
+      : _client = client ?? http.Client();
+
+  final http.Client _client;
+  final Duration timeout;
+
   @override
   String get name => 'DoujinDB';
 
@@ -15,8 +22,11 @@ class DoujinDbProvider implements MetadataProvider {
     final url = Uri.parse('https://doujindb.truesight.xyz/api/search?q=$query');
 
     try {
-      final res = await http.get(url);
-      if (res.statusCode != 200) return null;
+      final res = await _client.get(url).timeout(timeout);
+      if (res.statusCode != 200) {
+        debugPrint('DoujinDbProvider search failed: HTTP ${res.statusCode}');
+        return null;
+      }
 
       final data = jsonDecode(res.body) as Map<String, dynamic>;
       final results = data['results'] as List?;
@@ -28,6 +38,9 @@ class DoujinDbProvider implements MetadataProvider {
       final tags = (first['tags'] as List?)?.cast<String>() ?? <String>[];
 
       return Metadata(title: title, language: lang, tags: tags);
+    } on TimeoutException catch (e) {
+      debugPrint('DoujinDbProvider search timeout: $e');
+      return null;
     } catch (e, st) {
       debugPrint('DoujinDbProvider search error: $e');
       debugPrintStack(stackTrace: st);

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -7,6 +8,12 @@ import 'metadata_provider.dart';
 
 /// Queries the AniList GraphQL API for manga metadata.
 class AniListProvider implements MetadataProvider {
+  AniListProvider({http.Client? client, this.timeout = const Duration(seconds: 5)})
+      : _client = client ?? http.Client();
+
+  final http.Client _client;
+  final Duration timeout;
+
   @override
   String get name => 'AniList';
 
@@ -29,9 +36,14 @@ class AniListProvider implements MetadataProvider {
     final body = jsonEncode({'query': graphQuery, 'variables': {'search': query}});
 
     try {
-      final res = await http.post(Uri.parse(url),
-          headers: {'Content-Type': 'application/json'}, body: body);
-      if (res.statusCode != 200) return null;
+      final res = await _client
+          .post(Uri.parse(url),
+              headers: {'Content-Type': 'application/json'}, body: body)
+          .timeout(timeout);
+      if (res.statusCode != 200) {
+        debugPrint('AniListProvider search failed: HTTP ${res.statusCode}');
+        return null;
+      }
 
       final data = jsonDecode(res.body) as Map<String, dynamic>;
       final media = data['data']?['Media'];
@@ -47,6 +59,9 @@ class AniListProvider implements MetadataProvider {
           <String>[];
 
       return Metadata(title: title, language: lang, tags: tags);
+    } on TimeoutException catch (e) {
+      debugPrint('AniListProvider search timeout: $e');
+      return null;
     } catch (e, st) {
       debugPrint('AniListProvider search error: $e');
       debugPrintStack(stackTrace: st);
