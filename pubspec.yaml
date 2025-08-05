@@ -16,10 +16,10 @@ dependencies:
   path: 1.9.1
 
   http: ^0.13.6
-  file_picker: ^6.1.1
+  file_picker: ^6.2.1
   archive: ^3.3.7
   rar: ^0.1.0
-  pdf_render: ^1.4.0
+  pdf_render: ^1.4.12
   permission_handler: ^10.4.3
   flutter_localizations:
     sdk: flutter
