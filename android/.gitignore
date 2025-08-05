@@ -10,10 +10,10 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
-android/app/src/main/res/mipmap*/ic_launcher.png
 ios/Runner/Assets.xcassets/**
 macos/Runner/Assets.xcassets/**
 windows/runner/resources/*.ico
 
 # Icon assets
 **/res/**/*.png
+!app/src/main/res/mipmap-*/ic_launcher.png
