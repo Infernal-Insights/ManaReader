@@ -27,7 +27,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   late BookModel _book;
   bool _isRtl = false;
   bool _doublePage = false;
-  bool _preload = true;
+  final Set<int> _preloadErrors = {};
   int _currentPage = 0;
   Set<int> _bookmarks = {};
   bool _showUI = true;
@@ -45,10 +45,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
     _loadBookmarks();
     if (_book.pages.isEmpty) {
       _loadPages().then((_) {
-        if (_preload) _precache(_currentPage);
+        _precache(_currentPage);
       });
     } else {
-      if (_preload) _precache(_currentPage);
+      _precache(_currentPage);
     }
   }
 
@@ -66,7 +66,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
     if (id != null) {
       await DbHelper.instance.updateProgress(id, _pageToProgress(index));
     }
-    if (_preload) _precache(index + 1);
+    _precache(index + 1);
     if (index >= _pageCount - 1) {
       _showEndDialog();
     }
@@ -116,18 +116,19 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   void _precache(int index) {
-    if (!_preload || !mounted) return;
+    if (!mounted) return;
     final paths = _pagesForIndex(index);
     for (var i = 0; i < paths.length; i++) {
       final path = paths[i];
       if (path.isEmpty) continue;
       final pageNumber = _doublePage ? index * 2 + i + 1 : index + 1;
+      if (_preloadErrors.contains(pageNumber)) continue;
       precacheImage(FileImage(File(path)), context).catchError((e, st) {
         debugPrint('Failed to preload image at $path: $e');
         debugPrintStack(stackTrace: st);
         if (!mounted) return;
         setState(() {
-          _preload = false;
+          _preloadErrors.add(pageNumber);
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
