@@ -112,17 +112,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final dir = Directory(book.path);
     if (!await dir.exists()) return null;
     try {
-      final files = await dir
-          .list(recursive: true)
-          .where((e) => e is File && _isImage(e.path))
-          .map((e) => e.path)
-          .toList();
-      files.sort();
-      return files.isNotEmpty ? files.first : null;
+      await for (final entity in dir.list(recursive: true)) {
+        if (entity is File && _isImage(entity.path)) {
+          return entity.path;
+        }
+      }
     } catch (e) {
       debugPrint('Failed to load thumbnail for ${book.path}: $e');
-      return null;
     }
+    return null;
   }
 
   Future<double> _loadProgress(BookModel book) async {
@@ -644,4 +642,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
       }
     }
   }
+}
+
+@visibleForTesting
+Future<String?> loadThumbnailForTest(BookModel book) {
+  return _LibraryScreenState()._loadThumbnail(book);
 }
