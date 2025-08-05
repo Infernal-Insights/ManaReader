@@ -570,47 +570,51 @@ class _LibraryScreenState extends State<LibraryScreen> {
   Future<void> _pickAndImport() async {
     if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
       if (!await _requestStoragePermission()) return;
+      if (!mounted) return;
       final result = await FilePicker.platform.pickFiles();
+      if (!mounted) return;
       if (result == null || result.files.isEmpty) return;
       final path = result.files.single.path;
       if (path == null) return;
       try {
         final importer = Importer();
         await importer.importPath(path);
+        if (!mounted) return;
         _loadBooks();
       } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(
-            SnackBar(
-              content: Text(
-                AppLocalizations.of(context)!.importFailed(e.toString()),
-              ),
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.importFailed(e.toString()),
             ),
-          );
-        }
-      }
-    } else {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Not supported on this platform'),
           ),
         );
       }
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Not supported on this platform'),
+        ),
+      );
     }
   }
 
   Future<void> _syncDirectory() async {
     if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
       if (!await _requestStoragePermission()) return;
+      if (!mounted) return;
       final path = await FilePicker.platform.getDirectoryPath();
+      if (!mounted) return;
       if (path == null) return;
       try {
         final success = await syncDirectoryPath(path);
-        if (mounted) _loadBooks();
-        if (!success && context.mounted) {
+        if (!mounted) return;
+        _loadBooks();
+        if (!success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -620,26 +624,24 @@ class _LibraryScreenState extends State<LibraryScreen> {
           );
         }
       } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(
-            SnackBar(
-              content: Text(
-                AppLocalizations.of(context)!.importFailed(e.toString()),
-              ),
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.importFailed(e.toString()),
             ),
-          );
-        }
-      }
-    } else {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Not supported on this platform'),
           ),
         );
       }
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Not supported on this platform'),
+        ),
+      );
     }
   }
 }
