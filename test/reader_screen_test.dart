@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mana_reader/l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/painting.dart' as painting;
 
 import 'dart:convert';
 import 'dart:io';
@@ -127,5 +128,38 @@ void main() {
 
     slider = tester.widget(find.byType(Slider));
     expect(slider.value, 1);
+  });
+
+  testWidgets('continues preloading after a failure', (tester) async {
+    painting.imageCache.clear();
+    final dir = Directory.systemTemp.createTempSync();
+    final img1 = p.join(dir.path, 'a.png');
+    final missing = p.join(dir.path, 'b.png');
+    final img3 = p.join(dir.path, 'c.png');
+    final bytes = base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=');
+    File(img1).writeAsBytesSync(bytes);
+    File(img3).writeAsBytesSync(bytes);
+    final book = BookModel(
+      title: 'Read',
+      path: dir.path,
+      language: 'en',
+      pages: [img1, missing, img3],
+    );
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: ReaderScreen(book: book),
+    ));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Failed to load page 2'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('next_page_zone')));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
+    await tester.pump();
+
+    expect(painting.imageCache.containsKey(FileImage(File(img3))), isTrue);
   });
 }
