@@ -10,8 +10,8 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:archive/archive.dart';
-import 'package:pdf_render/pdf_render.dart';
-import 'package:pdf_render/src/interfaces/pdf_render_platform_interface.dart';
+import 'package:pdf_render_platform_interface/pdf_render.dart';
+import 'package:pdf_render_platform_interface/pdf_render_platform_interface.dart';
 
 import 'package:mana_reader/importers/rar_importer.dart';
 import 'package:mana_reader/importers/seven_zip_importer.dart';
@@ -19,16 +19,16 @@ import 'package:mana_reader/importers/pdf_importer.dart';
 
 class _FakePdfRenderPlatform extends PdfRenderPlatform {
   @override
-  Future<PdfDocument> openFile(String filePath) async => _FakePdfDocument();
+  Future<PdfDocument?> openFile(String filePath) async => _FakePdfDocument();
 
   @override
-  Future<PdfDocument> openAsset(String name) async => _FakePdfDocument();
+  Future<PdfDocument?> openAsset(String name) async => _FakePdfDocument();
 
   @override
-  Future<PdfDocument> openData(Uint8List data) async => _FakePdfDocument();
+  Future<PdfDocument?> openData(Uint8List data) async => _FakePdfDocument();
 
   @override
-  Future<PdfPageImageTexture> createTexture({required FutureOr<PdfDocument> pdfDocument, required int pageNumber}) =>
+  Future<PdfPageImageTexture> createTexture({required PdfDocument pdfDocument, required int pageNumber}) =>
       throw UnimplementedError();
 }
 
@@ -62,14 +62,13 @@ class _FakePdfPage extends PdfPage {
 
   @override
   Future<PdfPageImage> render({
-    int x = 0,
-    int y = 0,
+    int? x,
+    int? y,
     int? width,
     int? height,
     double? fullWidth,
     double? fullHeight,
-    bool backgroundFill = true,
-    bool allowAntialiasingIOS = false,
+    bool? backgroundFill,
   }) async {
     return _FakePdfPageImage(pageNumber);
   }
