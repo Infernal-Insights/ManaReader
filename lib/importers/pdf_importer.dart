@@ -22,10 +22,12 @@ class PdfImporter extends Importer {
       final ui.Image image = await img.createImageIfNotAvailable();
       final bytes =
           (await image.toByteData(format: ui.ImageByteFormat.png))!.buffer.asUint8List();
+      image.dispose();
       final imagePath = p.join(destDir.path, '${i.toString().padLeft(4, '0')}.png');
       final file = File(imagePath);
       await file.writeAsBytes(bytes);
       pages.add(imagePath);
+      await page.close();
       img.dispose();
     }
     await doc.dispose();
