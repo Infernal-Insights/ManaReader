@@ -27,7 +27,6 @@ class PdfImporter extends Importer {
       final file = File(imagePath);
       await file.writeAsBytes(bytes);
       pages.add(imagePath);
-      await page.close();
       img.dispose();
     }
     await doc.dispose();

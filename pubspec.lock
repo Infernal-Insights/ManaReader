@@ -269,6 +269,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.12"
+  pdf_render_platform_interface:
+    dependency: "direct dev"
+    description:
+      name: pdf_render_platform_interface
+      sha256: "67bf2a50a0db4f04f242f5eb6ac5f08541e1d603985c93b8154cdaa88111d3c3"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2-dev"
   permission_handler:
     dependency: "direct main"
     description:
@@ -318,7 +326,7 @@ packages:
     source: hosted
     version: "3.1.6"
   plugin_platform_interface:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
       name: plugin_platform_interface
       sha256: "4820fbfdb9478b1ebae27888254d445073732dae3d6ea81f0b7e06d5dedc3f02"
