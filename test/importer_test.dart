@@ -187,24 +187,25 @@ void main() {
 
     test('RarImporter extracts images', () async {
       const channel = MethodChannel('com.lkrjangid.rar');
-      channel.setMockMethodCallHandler((call) async {
-        if (call.method == 'extractRarFile') {
-          final bytes = File(
-            call.arguments['rarFilePath'] as String,
-          ).readAsBytesSync();
-          final archive = ZipDecoder().decodeBytes(bytes);
-          final dest = call.arguments['destinationPath'] as String;
-          for (final f in archive) {
-            if (f.isFile) {
-              final out = File(p.join(dest, f.name))
-                ..createSync(recursive: true);
-              out.writeAsBytesSync(f.content as List<int>);
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            if (call.method == 'extractRarFile') {
+              final bytes = File(
+                call.arguments['rarFilePath'] as String,
+              ).readAsBytesSync();
+              final archive = ZipDecoder().decodeBytes(bytes);
+              final dest = call.arguments['destinationPath'] as String;
+              for (final f in archive) {
+                if (f.isFile) {
+                  final out = File(p.join(dest, f.name))
+                    ..createSync(recursive: true);
+                  out.writeAsBytesSync(f.content as List<int>);
+                }
+              }
+              return {'success': true, 'message': 'ok'};
             }
-          }
-          return {'success': true, 'message': 'ok'};
-        }
-        return null;
-      });
+            return null;
+          });
 
       final tmp = Directory.systemTemp.createTempSync();
       final img = base64Decode(
