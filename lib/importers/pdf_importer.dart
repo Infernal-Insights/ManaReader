@@ -25,7 +25,6 @@ class PdfImporter extends Importer {
       final imagePath = p.join(destDir.path, '${i.toString().padLeft(4, '0')}.png');
       final file = File(imagePath);
       await file.writeAsBytes(bytes);
-      await page.dispose();
       pages.add(imagePath);
     }
     await doc.dispose();
