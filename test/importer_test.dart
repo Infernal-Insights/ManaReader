@@ -185,6 +185,30 @@ void main() {
       expect(File(book.pages.first).existsSync(), isTrue);
     });
 
+    test('ZipImporter ignores files with traversal paths', () async {
+      final tmp = Directory.systemTemp.createTempSync();
+      final img = base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=',
+      );
+      final archive = Archive()
+        ..addFile(ArchiveFile('c.png', img.length, img))
+        ..addFile(ArchiveFile('../evil.png', img.length, img));
+      final bytes = ZipEncoder().encode(archive)!;
+      final zipPath = p.join(tmp.path, 'c.cbz');
+      File(zipPath).writeAsBytesSync(bytes);
+
+      final importer = ZipImporter();
+      final book = await importer.import(zipPath);
+      expect(book.pages.length, 1);
+      expect(p.basename(book.pages.first), 'c.png');
+
+      final docs = (PathProviderPlatform.instance as _FakePathProviderPlatform)
+          .tempDir
+          .path;
+      final evilPath = p.join(docs, 'books', 'evil.png');
+      expect(File(evilPath).existsSync(), isFalse);
+    });
+
     test('RarImporter extracts images', () async {
       const channel = MethodChannel('com.lkrjangid.rar');
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
