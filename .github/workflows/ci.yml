@@ -38,7 +38,10 @@ jobs:
       - name: Run Flutter tests
         run: |
           mkdir -p build/test-results
-          flutter test --machine | tojunit --output build/test-results/flutter-junit.xml
+          flutter test --coverage --machine | tojunit --output build/test-results/flutter-junit.xml
+
+      - name: Check coverage
+        run: dart run tool/coverage_check.dart 80
 
       - name: Run Flutter integration tests
         run: |
