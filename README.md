@@ -20,8 +20,13 @@ Mana Reader aims to be a lightweight, mobile manga and doujinshi reader built wi
    installation with `flutter doctor`.
 2. From the repository root run `flutter pub get` to fetch project
    dependencies.
-3. After dependencies are installed you can build or test the project using
+3. Install git hooks so formatting and analysis run before each commit:
+   `pre-commit install`.
+4. After dependencies are installed you can build or test the project using
    `flutter build` or `flutter test`.
+
+The pre-commit hooks run `flutter format` and `flutter analyze`. To check
+the entire repository manually, use `pre-commit run --all-files`.
 
 ## Running
 
