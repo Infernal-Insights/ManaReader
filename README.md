@@ -80,8 +80,12 @@ To run the analyzer and test suite locally:
 
 ```bash
 flutter analyze
-flutter test
+./tool/test.sh
 ```
+
+The test script generates `build/test-results/flutter-junit.xml` for reporting.
+Install the converter with `dart pub global activate junitreport` if `tojunit` is
+not already available in your PATH.
 
 Make sure you have the Flutter SDK installed and dependencies fetched with `flutter pub get`.
 
