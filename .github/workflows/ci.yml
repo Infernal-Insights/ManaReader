@@ -40,6 +40,12 @@ jobs:
           mkdir -p build/test-results
           flutter test --machine | tojunit --output build/test-results/flutter-junit.xml
 
+      - name: Run Flutter integration tests
+        run: |
+          mkdir -p build/integration-test-results
+          flutter test integration_test --machine | tojunit \
+            --output build/integration-test-results/flutter-integration-junit.xml
+
       - name: Run Android unit tests
         run: ./gradlew testDebugUnitTest
         working-directory: android
@@ -57,6 +63,12 @@ jobs:
         with:
           name: flutter-tests
           path: build/test-results/flutter-junit.xml
+
+      - name: Upload Flutter integration test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: flutter-integration-tests
+          path: build/integration-test-results/flutter-integration-junit.xml
 
       - name: Upload Android test results
         uses: actions/upload-artifact@v3
