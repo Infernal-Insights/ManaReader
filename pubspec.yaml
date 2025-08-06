@@ -16,7 +16,7 @@ dependencies:
   path: 1.9.1
 
   http: ^0.13.6
-  file_picker: ^6.2.1
+  file_picker: 3.0.4
   archive: ^3.3.7
   rar: ^0.1.0
   pdf_render: ^1.4.12
