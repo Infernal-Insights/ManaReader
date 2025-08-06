@@ -4,16 +4,63 @@ on:
   pull_request:
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: subosito/flutter-action@v2
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-      - run: flutter config --no-enable-linux-desktop --no-enable-macos-desktop --no-enable-windows-desktop
-      - run: flutter pub get
-      - run: dart format --set-exit-if-changed .
-      - run: flutter analyze
-      - run: flutter test
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Check formatting
+        run: flutter format --set-exit-if-changed .
+
+      - name: Analyze code
+        run: flutter analyze
+
+      - name: Install test formatter
+        run: |
+          dart pub global activate junitreport
+          echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+
+      - name: Run Flutter tests
+        run: flutter test --machine | tojunit --output junit.xml
+
+      - name: Run Android unit tests
+        run: ./gradlew testDebugUnitTest
+        working-directory: android
+
+      - name: Run Android instrumentation tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          script: cd android && ./gradlew connectedAndroidTest
+
+      - name: Upload Flutter test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: flutter-tests
+          path: junit.xml
+
+      - name: Upload Android test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-tests
+          path: |
+            android/**/build/test-results/testDebugUnitTest/
+            android/**/build/outputs/androidTest-results/connected/
+            android/**/build/reports/androidTests/connected/
