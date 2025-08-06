@@ -14,10 +14,15 @@ class ZipImporter extends Importer {
     final archive = ZipDecoder().decodeBytes(bytes);
     final baseName = p.basenameWithoutExtension(filePath);
     final destDir = await _createDestDir(baseName);
+    final destPath = p.normalize(destDir.path);
     final pages = <String>[];
     for (final file in archive) {
       if (file.isFile) {
-        final outPath = p.join(destDir.path, file.name);
+        final outPath = p.normalize(p.join(destPath, file.name));
+        if (!p.isWithin(destPath, outPath)) {
+          // Skip files that would escape the destination directory.
+          continue;
+        }
         File(outPath)
           ..createSync(recursive: true)
           ..writeAsBytesSync(file.content as List<int>);
