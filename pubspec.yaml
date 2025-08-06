@@ -36,7 +36,6 @@ dev_dependencies:
   sqflite_common_ffi: ^2.3.0
   path_provider_platform_interface: any
   pdf_render_platform_interface: any
-  junitreport: ^2.0.2
 
 flutter:
   uses-material-design: true
