@@ -18,7 +18,8 @@ void main() {
     final dir = Directory.systemTemp.createTempSync();
     final imgPath = p.join(dir.path, 'a.png');
     final bytes = base64Decode(
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=');
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=',
+    );
     File(imgPath).writeAsBytesSync(bytes);
 
     final book = BookModel(
@@ -27,11 +28,13 @@ void main() {
       language: 'en',
       pages: [imgPath],
     );
-    await tester.pumpWidget(MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: ReaderScreen(book: book),
-    ));
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ReaderScreen(book: book),
+      ),
+    );
     expect(find.text('Read Me'), findsOneWidget);
     expect(find.byType(PageView), findsOneWidget);
   });
@@ -39,13 +42,24 @@ void main() {
   testWidgets('toggles reading direction', (tester) async {
     final dir = Directory.systemTemp.createTempSync();
     final imgPath = p.join(dir.path, 'a.png');
-    File(imgPath).writeAsBytesSync(base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII='));
-    final book = BookModel(title: 'Read', path: dir.path, language: 'en', pages: [imgPath]);
-    await tester.pumpWidget(MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: ReaderScreen(book: book),
-    ));
+    File(imgPath).writeAsBytesSync(
+      base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=',
+      ),
+    );
+    final book = BookModel(
+      title: 'Read',
+      path: dir.path,
+      language: 'en',
+      pages: [imgPath],
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ReaderScreen(book: book),
+      ),
+    );
     final btn = find.byIcon(Icons.format_textdirection_l_to_r);
     expect(btn, findsOneWidget);
     await tester.tap(btn);
@@ -54,17 +68,40 @@ void main() {
   });
 
   testWidgets('toggles double page mode', (tester) async {
+    final binding = tester.binding;
+    binding.window.physicalSizeTestValue = const Size(500, 800);
+    binding.window.devicePixelRatioTestValue = 1.0;
+    addTearDown(() {
+      binding.window.clearPhysicalSizeTestValue();
+      binding.window.clearDevicePixelRatioTestValue();
+    });
+
     final dir = Directory.systemTemp.createTempSync();
     final imgPath = p.join(dir.path, 'a.png');
     final img2 = p.join(dir.path, 'b.png');
-    File(imgPath).writeAsBytesSync(base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII='));
-    File(img2).writeAsBytesSync(base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII='));
-    final book = BookModel(title: 'Read', path: dir.path, language: 'en', pages: [imgPath, img2]);
-    await tester.pumpWidget(MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: ReaderScreen(book: book),
-    ));
+    File(imgPath).writeAsBytesSync(
+      base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=',
+      ),
+    );
+    File(img2).writeAsBytesSync(
+      base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=',
+      ),
+    );
+    final book = BookModel(
+      title: 'Read',
+      path: dir.path,
+      language: 'en',
+      pages: [imgPath, img2],
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ReaderScreen(book: book),
+      ),
+    );
     final btn = find.byIcon(Icons.filter_2);
     expect(btn, findsOneWidget);
     await tester.tap(btn);
@@ -72,17 +109,131 @@ void main() {
     expect(find.byIcon(Icons.filter_1), findsOneWidget);
   });
 
+  testWidgets('auto enables double page on wide screens', (tester) async {
+    final binding = tester.binding;
+    binding.window.physicalSizeTestValue = const Size(800, 600);
+    binding.window.devicePixelRatioTestValue = 1.0;
+    addTearDown(() {
+      binding.window.clearPhysicalSizeTestValue();
+      binding.window.clearDevicePixelRatioTestValue();
+    });
+
+    final dir = Directory.systemTemp.createTempSync();
+    final imgPath = p.join(dir.path, 'a.png');
+    final img2 = p.join(dir.path, 'b.png');
+    File(imgPath).writeAsBytesSync(
+      base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=',
+      ),
+    );
+    File(img2).writeAsBytesSync(
+      base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=',
+      ),
+    );
+    final book = BookModel(
+      title: 'Read',
+      path: dir.path,
+      language: 'en',
+      pages: [imgPath, img2],
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ReaderScreen(book: book),
+      ),
+    );
+    expect(find.byIcon(Icons.filter_1), findsOneWidget);
+  });
+
+  testWidgets('uses BoxFit.contain in portrait', (tester) async {
+    final binding = tester.binding;
+    binding.window.physicalSizeTestValue = const Size(400, 800);
+    binding.window.devicePixelRatioTestValue = 1.0;
+    addTearDown(() {
+      binding.window.clearPhysicalSizeTestValue();
+      binding.window.clearDevicePixelRatioTestValue();
+    });
+
+    final dir = Directory.systemTemp.createTempSync();
+    final imgPath = p.join(dir.path, 'a.png');
+    File(imgPath).writeAsBytesSync(
+      base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=',
+      ),
+    );
+    final book = BookModel(
+      title: 'Read',
+      path: dir.path,
+      language: 'en',
+      pages: [imgPath],
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ReaderScreen(book: book),
+      ),
+    );
+    final image = tester.widget<Image>(find.byType(Image).first);
+    expect(image.fit, BoxFit.contain);
+  });
+
+  testWidgets('uses BoxFit.fitWidth in landscape', (tester) async {
+    final binding = tester.binding;
+    binding.window.physicalSizeTestValue = const Size(800, 400);
+    binding.window.devicePixelRatioTestValue = 1.0;
+    addTearDown(() {
+      binding.window.clearPhysicalSizeTestValue();
+      binding.window.clearDevicePixelRatioTestValue();
+    });
+
+    final dir = Directory.systemTemp.createTempSync();
+    final imgPath = p.join(dir.path, 'a.png');
+    File(imgPath).writeAsBytesSync(
+      base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=',
+      ),
+    );
+    final book = BookModel(
+      title: 'Read',
+      path: dir.path,
+      language: 'en',
+      pages: [imgPath],
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ReaderScreen(book: book),
+      ),
+    );
+    final image = tester.widget<Image>(find.byType(Image).first);
+    expect(image.fit, BoxFit.fitWidth);
+  });
+
   testWidgets('shows bookmark toggle and slider', (tester) async {
     final dir = Directory.systemTemp.createTempSync();
     final imgPath = p.join(dir.path, 'a.png');
-    File(imgPath).writeAsBytesSync(base64Decode(
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII='));
-    final book = BookModel(title: 'Read', path: dir.path, language: 'en', pages: [imgPath]);
-    await tester.pumpWidget(MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: ReaderScreen(book: book),
-    ));
+    File(imgPath).writeAsBytesSync(
+      base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=',
+      ),
+    );
+    final book = BookModel(
+      title: 'Read',
+      path: dir.path,
+      language: 'en',
+      pages: [imgPath],
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ReaderScreen(book: book),
+      ),
+    );
     expect(find.byIcon(Icons.bookmark_border), findsOneWidget);
     expect(find.byType(Slider), findsOneWidget);
   });
@@ -90,9 +241,17 @@ void main() {
   testWidgets('opens bookmarks screen from menu', (tester) async {
     final dir = Directory.systemTemp.createTempSync();
     final imgPath = p.join(dir.path, 'a.png');
-    File(imgPath).writeAsBytesSync(base64Decode(
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII='));
-    final book = BookModel(title: 'Read', path: dir.path, language: 'en', pages: [imgPath]);
+    File(imgPath).writeAsBytesSync(
+      base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=',
+      ),
+    );
+    final book = BookModel(
+      title: 'Read',
+      path: dir.path,
+      language: 'en',
+      pages: [imgPath],
+    );
     final router = GoRouter(
       routes: [
         GoRoute(
@@ -124,15 +283,23 @@ void main() {
     final img1 = p.join(dir.path, 'a.png');
     final img2 = p.join(dir.path, 'b.png');
     final bytes = base64Decode(
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=');
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=',
+    );
     File(img1).writeAsBytesSync(bytes);
     File(img2).writeAsBytesSync(bytes);
-    final book = BookModel(title: 'Read', path: dir.path, language: 'en', pages: [img1, img2]);
-    await tester.pumpWidget(MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: ReaderScreen(book: book),
-    ));
+    final book = BookModel(
+      title: 'Read',
+      path: dir.path,
+      language: 'en',
+      pages: [img1, img2],
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ReaderScreen(book: book),
+      ),
+    );
 
     Slider slider = tester.widget(find.byType(Slider));
     expect(slider.value, 0);
@@ -151,7 +318,8 @@ void main() {
     final missing = p.join(dir.path, 'b.png');
     final img3 = p.join(dir.path, 'c.png');
     final bytes = base64Decode(
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=');
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=',
+    );
     File(img1).writeAsBytesSync(bytes);
     File(img3).writeAsBytesSync(bytes);
     final book = BookModel(
@@ -160,11 +328,13 @@ void main() {
       language: 'en',
       pages: [img1, missing, img3],
     );
-    await tester.pumpWidget(MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: ReaderScreen(book: book),
-    ));
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ReaderScreen(book: book),
+      ),
+    );
     await tester.pump();
     await tester.pump();
     expect(find.text('Failed to load page 2'), findsOneWidget);
