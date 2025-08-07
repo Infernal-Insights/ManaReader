@@ -223,7 +223,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
             TextButton(
               onPressed: () {
                 context.pop();
-                context.pushReplacement('/reader', extra: random!);
+                context.pushReplacement('/reader', extra: random);
               },
               child: Text(AppLocalizations.of(context)!.randomUnread),
             ),
@@ -263,9 +263,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
   Widget _buildPage(int index) {
     final pages = _pagesForIndex(index);
     final orientation = MediaQuery.of(context).orientation;
-    final fit = orientation == Orientation.portrait
-        ? BoxFit.contain
-        : BoxFit.fitWidth;
+    final fit =
+        orientation == Orientation.portrait ? BoxFit.contain : BoxFit.fitWidth;
     if (pages.length == 1) {
       return _ZoomableImage(
         path: pages.first,
@@ -338,8 +337,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       icon: Icon(_doublePage ? Icons.filter_1 : Icons.filter_2),
                       onPressed: () => setState(() {
                         _doublePage = !_doublePage;
-                        final newPage = (_currentPage / (_doublePage ? 2 : 1))
-                            .floor();
+                        final newPage =
+                            (_currentPage / (_doublePage ? 2 : 1)).floor();
                         _controller = PageController(initialPage: newPage);
                         _currentPage = newPage;
                       }),

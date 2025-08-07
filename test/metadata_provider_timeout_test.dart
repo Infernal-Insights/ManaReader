@@ -10,7 +10,7 @@ import 'package:mana_reader/metadata/metadata_provider.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  Future<void> _checkTimeout(MetadataProvider provider) async {
+  Future<void> checkTimeout(MetadataProvider provider) async {
     final messages = <String?>[];
     final orig = debugPrint;
     debugPrint = (String? message, {int? wrapWidth}) {
@@ -29,8 +29,10 @@ void main() {
       return http.Response('{}', 200);
     });
     final provider = AniListProvider(
-        client: client, timeout: const Duration(milliseconds: 10));
-    await _checkTimeout(provider);
+      client: client,
+      timeout: const Duration(milliseconds: 10),
+    );
+    await checkTimeout(provider);
   });
 
   test('DoujinDbProvider logs timeout', () async {
@@ -39,7 +41,9 @@ void main() {
       return http.Response('{}', 200);
     });
     final provider = DoujinDbProvider(
-        client: client, timeout: const Duration(milliseconds: 10));
-    await _checkTimeout(provider);
+      client: client,
+      timeout: const Duration(milliseconds: 10),
+    );
+    await checkTimeout(provider);
   });
 }

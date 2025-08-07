@@ -19,10 +19,12 @@ class PdfImporter extends Importer {
       final img = await page.render(
         width: page.width,
         height: page.height,
-        format: PdfPageImageFormat.png,
+        format: PdfPageFormat.PNG,
       );
-      final imagePath =
-          p.join(destDir.path, '${i.toString().padLeft(4, '0')}.png');
+      final imagePath = p.join(
+        destDir.path,
+        '${i.toString().padLeft(4, '0')}.png',
+      );
       final file = File(imagePath);
       await file.writeAsBytes(img!.bytes);
       pages.add(imagePath);

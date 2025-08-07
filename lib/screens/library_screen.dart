@@ -1,5 +1,4 @@
-import 'dart:io';
-import 'dart:io' show Platform;
+import 'dart:io' show Directory, File, Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -11,8 +10,6 @@ import '../import/sync_service.dart';
 import '../l10n/app_localizations.dart';
 import '../models/book_model.dart';
 import 'package:file_selector/file_selector.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// Displays the list of imported books.
@@ -174,14 +171,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
               value: _sortOrder,
               items: [
                 DropdownMenuItem(
-                    value: 'title',
-                    child: Text(AppLocalizations.of(context)!.sortTitle)),
+                  value: 'title',
+                  child: Text(AppLocalizations.of(context)!.sortTitle),
+                ),
                 DropdownMenuItem(
-                    value: 'author',
-                    child: Text(AppLocalizations.of(context)!.sortAuthor)),
+                  value: 'author',
+                  child: Text(AppLocalizations.of(context)!.sortAuthor),
+                ),
                 DropdownMenuItem(
-                    value: 'recent',
-                    child: Text(AppLocalizations.of(context)!.sortRecent)),
+                  value: 'recent',
+                  child: Text(AppLocalizations.of(context)!.sortRecent),
+                ),
               ],
               onChanged: (value) {
                 if (value != null) {
@@ -191,14 +191,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
               },
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.history),
-            onPressed: _openHistory,
-          ),
-          IconButton(
-            icon: const Icon(Icons.sync),
-            onPressed: _syncDirectory,
-          ),
+          IconButton(icon: const Icon(Icons.history), onPressed: _openHistory),
+          IconButton(icon: const Icon(Icons.sync), onPressed: _syncDirectory),
           IconButton(
             icon: Icon(_isGrid ? Icons.view_list : Icons.grid_on),
             onPressed: () => setState(() => _isGrid = !_isGrid),
@@ -232,6 +226,21 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   onTap: () => context.push('/reader', extra: book),
                   onLongPress: () => _confirmDelete(book),
                   child: GridTile(
+                    footer: GridTileBar(
+                      backgroundColor: Colors.black54,
+                      title: Text(book.title, textAlign: TextAlign.center),
+                      trailing: PopupMenuButton<String>(
+                        onSelected: (value) {
+                          if (value == 'edit') _openDetails(book);
+                        },
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: Text(AppLocalizations.of(context)!.edit),
+                          ),
+                        ],
+                      ),
+                    ),
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
@@ -259,8 +268,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                             return Container(
                               color: Colors.grey.shade800,
                               alignment: Alignment.center,
-                              child: const Icon(Icons.image_not_supported,
-                                  size: 48),
+                              child: const Icon(
+                                Icons.image_not_supported,
+                                size: 48,
+                              ),
                             );
                           },
                         ),
@@ -274,8 +285,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                             ),
                             onPressed: () async {
                               if (book.id != null) {
-                                await DbHelper.instance
-                                    .toggleFavorite(book.id!, !book.favorite);
+                                await DbHelper.instance.toggleFavorite(
+                                  book.id!,
+                                  !book.favorite,
+                                );
                                 _loadBooks();
                               }
                             },
@@ -307,32 +320,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
                               final percent = (value * 100).round();
                               return Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 4, vertical: 2),
+                                  horizontal: 4,
+                                  vertical: 2,
+                                ),
                                 color: Colors.black54,
                                 child: Text(
                                   '$percent%',
                                   style: const TextStyle(
-                                      fontSize: 12, color: Colors.white),
+                                    fontSize: 12,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               );
                             },
                           ),
                         ),
                       ],
-                    ),
-                    footer: GridTileBar(
-                      backgroundColor: Colors.black54,
-                      title: Text(book.title, textAlign: TextAlign.center),
-                      trailing: PopupMenuButton<String>(
-                        onSelected: (value) {
-                          if (value == 'edit') _openDetails(book);
-                        },
-                        itemBuilder: (_) => [
-                          PopupMenuItem(
-                              value: 'edit',
-                              child: Text(AppLocalizations.of(context)!.edit)),
-                        ],
-                      ),
                     ),
                   ),
                 );
@@ -357,12 +360,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           final percent = (value * 100).round();
                           return Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 4, vertical: 2),
+                              horizontal: 4,
+                              vertical: 2,
+                            ),
                             color: Colors.black54,
                             child: Text(
                               '$percent%',
                               style: const TextStyle(
-                                  fontSize: 12, color: Colors.white),
+                                fontSize: 12,
+                                color: Colors.white,
+                              ),
                             ),
                           );
                         },
@@ -374,8 +381,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         ),
                         onPressed: () async {
                           if (book.id != null) {
-                            await DbHelper.instance
-                                .toggleFavorite(book.id!, !book.favorite);
+                            await DbHelper.instance.toggleFavorite(
+                              book.id!,
+                              !book.favorite,
+                            );
                             _loadBooks();
                           }
                         },
@@ -386,8 +395,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         },
                         itemBuilder: (_) => [
                           PopupMenuItem(
-                              value: 'edit',
-                              child: Text(AppLocalizations.of(context)!.edit)),
+                            value: 'edit',
+                            child: Text(AppLocalizations.of(context)!.edit),
+                          ),
                         ],
                       ),
                     ],
@@ -506,9 +516,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           ),
                           Text(AppLocalizations.of(context)!.unread),
                           IconButton(
-                            icon: Icon(_showFavorites
-                                ? Icons.star
-                                : Icons.star_border),
+                            icon: Icon(
+                              _showFavorites ? Icons.star : Icons.star_border,
+                            ),
                             onPressed: () {
                               setState(() => _showFavorites = !_showFavorites);
                               _loadBooks();
@@ -600,9 +610,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
         final message = status.isPermanentlyDenied
             ? 'Storage permission permanently denied. Please enable it in settings.'
             : 'Storage permission denied';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
       return false;
     } else {
@@ -612,9 +622,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
         final message = status.isPermanentlyDenied
             ? 'Photo access permanently denied. Please enable it in settings.'
             : 'Photo access denied';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
       return false;
     }
@@ -634,9 +644,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       _loadBooks();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             AppLocalizations.of(context)!.importFailed(e.toString()),
@@ -661,17 +669,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
       if (!success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.importPartialFailure,
-            ),
+            content: Text(AppLocalizations.of(context)!.importPartialFailure),
           ),
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             AppLocalizations.of(context)!.importFailed(e.toString()),
