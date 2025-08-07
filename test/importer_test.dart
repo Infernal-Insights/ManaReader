@@ -11,47 +11,35 @@ import 'package:mana_reader/importers/folder_importer.dart';
 import 'package:mana_reader/importers/zip_importer.dart';
 import 'package:mana_reader/importers/seven_zip_importer.dart';
 import 'package:mana_reader/importers/pdf_importer.dart';
-import 'package:pdf_render_platform_interface/pdf_render.dart';
-import 'package:pdf_render_platform_interface/pdf_render_platform_interface.dart';
+import 'package:native_pdf_renderer/native_pdf_renderer.dart';
+import 'package:native_pdf_renderer/src/renderer/interfaces/platform.dart';
 import 'dart:typed_data';
-import 'dart:ffi';
-import 'dart:ui' as ui;
 import 'dart:async';
 
-class _FakePdfRenderPlatform extends PdfRenderPlatform {
+class _FakePdfxPlatform extends PdfxPlatform {
   @override
-  Future<PdfDocument?> openFile(String filePath) async => _FakePdfDocument();
+  Future<PdfDocument> openFile(String filePath, {String? password}) async =>
+      _FakePdfDocument();
 
   @override
-  Future<PdfDocument?> openAsset(String name) async => _FakePdfDocument();
+  Future<PdfDocument> openAsset(String name, {String? password}) async =>
+      _FakePdfDocument();
 
   @override
-  Future<PdfDocument?> openData(Uint8List data) async => _FakePdfDocument();
-
-  @override
-  Future<PdfPageImageTexture> createTexture({
-    required PdfDocument pdfDocument,
-    required int pageNumber,
-  }) => throw UnimplementedError();
+  Future<PdfDocument> openData(FutureOr<Uint8List> data,
+          {String? password}) async =>
+      _FakePdfDocument();
 }
 
 class _FakePdfDocument extends PdfDocument {
   _FakePdfDocument()
-    : super(
-        sourceName: 'fake.pdf',
-        pageCount: 1,
-        verMajor: 1,
-        verMinor: 7,
-        isEncrypted: false,
-        allowsCopying: true,
-        allowsPrinting: true,
-      );
+      : super(sourceName: 'fake.pdf', id: '1', pagesCount: 1);
 
   @override
-  Future<void> dispose() async {}
+  Future<void> close() async {}
 
   @override
-  Future<PdfPage> getPage(int pageNumber) async =>
+  Future<PdfPage> getPage(int pageNumber, {bool autoCloseAndroid = false}) async =>
       _FakePdfPage(this, pageNumber);
 
   @override
@@ -63,72 +51,56 @@ class _FakePdfDocument extends PdfDocument {
 
 class _FakePdfPage extends PdfPage {
   _FakePdfPage(PdfDocument doc, int num)
-    : super(document: doc, pageNumber: num, width: 1, height: 1);
+      : super(
+          document: doc,
+          id: 'page$num',
+          pageNumber: num,
+          width: 1,
+          height: 1,
+          autoCloseAndroid: false,
+        );
 
   @override
-  Future<PdfPageImage> render({
-    int? x,
-    int? y,
-    int? width,
-    int? height,
-    double? fullWidth,
-    double? fullHeight,
-    bool? backgroundFill,
+  Future<PdfPageImage?> render({
+    required double width,
+    required double height,
+    PdfPageImageFormat format = PdfPageImageFormat.jpeg,
+    String? backgroundColor,
+    Rect? cropRect,
+    int quality = 100,
+    bool forPrint = false,
+    bool removeTempFile = true,
   }) async {
-    return _FakePdfPageImage(pageNumber);
+    final bytes = base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=');
+    return _FakePdfPageImage(pageNumber, bytes, format, quality);
   }
 
+  @override
+  Future<PdfPageTexture> createTexture() => throw UnimplementedError();
+
+  @override
   Future<void> close() async {}
 }
 
 class _FakePdfPageImage extends PdfPageImage {
-  _FakePdfPageImage(int page)
-    : _pixels = Uint8List.fromList(const [255, 0, 0, 255]),
-      super(
-        pageNumber: page,
-        x: 0,
-        y: 0,
-        width: 1,
-        height: 1,
-        fullWidth: 1,
-        fullHeight: 1,
-        pageWidth: 1,
-        pageHeight: 1,
-      );
-
-  final Uint8List _pixels;
-  ui.Image? _image;
+  _FakePdfPageImage(
+      int page, Uint8List bytes, PdfPageImageFormat format, int quality)
+      : super(
+          id: 'img$page',
+          pageNumber: page,
+          width: 1,
+          height: 1,
+          bytes: bytes,
+          format: format,
+          quality: quality,
+        );
 
   @override
-  Uint8List get pixels => _pixels;
+  bool operator ==(Object other) => identical(this, other);
 
   @override
-  Pointer<Uint8>? get buffer => null;
-
-  @override
-  void dispose() {}
-
-  @override
-  ui.Image? get imageIfAvailable => _image;
-
-  @override
-  Future<ui.Image> createImageIfNotAvailable() async {
-    if (_image != null) return _image!;
-    final comp = Completer<ui.Image>();
-    ui.decodeImageFromPixels(
-      _pixels,
-      1,
-      1,
-      ui.PixelFormat.rgba8888,
-      (img) => comp.complete(img),
-    );
-    _image = await comp.future;
-    return _image!;
-  }
-
-  @override
-  Future<ui.Image> createImageDetached() async =>
-      await createImageIfNotAvailable();
+  int get hashCode => super.hashCode;
 }
 
 class _FakePathProviderPlatform extends PathProviderPlatform {
@@ -268,7 +240,7 @@ zipfile.ZipFile(archive).extractall(dest)
     });
 
     test('PdfImporter renders pages', () async {
-      PdfRenderPlatform.instance = _FakePdfRenderPlatform();
+      PdfxPlatform.instance = _FakePdfxPlatform();
       final tmp = Directory.systemTemp.createTempSync();
       final pdfData = base64Decode(
         'JVBERi0xLjEKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBvYmo8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iagozIDAgb2JqPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9NZWRpYUJveFswIDAgNjEyIDc5Ml0+PmVuZG9iagp0cmFpbGVyPDwvUm9vdCAxIDAgUi9TaXplIDQ+PgolJUVPRg==',
