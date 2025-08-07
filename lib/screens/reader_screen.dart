@@ -20,8 +20,6 @@ class ReaderScreen extends StatefulWidget {
   State<ReaderScreen> createState() => _ReaderScreenState();
 }
 
-enum FitMode { contain, fitWidth }
-
 class _ReaderScreenState extends State<ReaderScreen> {
   late PageController _controller;
   late BookModel _book;
@@ -31,7 +29,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   int _currentPage = 0;
   Set<int> _bookmarks = {};
   bool _showUI = true;
-  FitMode _fitMode = FitMode.contain;
+  double? _lastWidth;
 
   int get _pageCount =>
       _doublePage ? (_book.pages.length / 2).ceil() : _book.pages.length;
@@ -154,11 +152,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
       debugPrint('Failed to read pages from ${_book.path}: $e');
       debugPrintStack(stackTrace: st);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to load pages'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to load pages')));
       return;
     }
     pages.sort();
@@ -266,7 +262,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   Widget _buildPage(int index) {
     final pages = _pagesForIndex(index);
-    final fit = _fitMode == FitMode.contain ? BoxFit.contain : BoxFit.fitWidth;
+    final orientation = MediaQuery.of(context).orientation;
+    final fit = orientation == Orientation.portrait
+        ? BoxFit.contain
+        : BoxFit.fitWidth;
     if (pages.length == 1) {
       return _ZoomableImage(
         path: pages.first,
@@ -297,124 +296,133 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _showUI
-          ? AppBar(
-              title: Text(_book.title),
-              actions: [
-                IconButton(
-                  icon: Icon(
-                    _isRtl
-                        ? Icons.format_textdirection_r_to_l
-                        : Icons.format_textdirection_l_to_r,
-                  ),
-                  onPressed: () => setState(() => _isRtl = !_isRtl),
-                ),
-                IconButton(
-                  icon: Icon(
-                    _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                  ),
-                  onPressed: _toggleBookmark,
-                ),
-                IconButton(
-                  icon: Icon(_doublePage ? Icons.filter_1 : Icons.filter_2),
-                  onPressed: () => setState(() {
-                    _doublePage = !_doublePage;
-                    final newPage = (_currentPage / (_doublePage ? 2 : 1))
-                        .floor();
-                    _controller = PageController(initialPage: newPage);
-                    _currentPage = newPage;
-                  }),
-                ),
-                IconButton(
-                  icon: Icon(
-                    _fitMode == FitMode.contain
-                        ? Icons.fit_screen
-                        : Icons.width_wide,
-                  ),
-                  tooltip: AppLocalizations.of(context)!.fitWidth,
-                  onPressed: () => setState(() {
-                    _fitMode = FitMode
-                        .values[(_fitMode.index + 1) % FitMode.values.length];
-                  }),
-                ),
-                PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'bookmarks') _openBookmarks();
-                  },
-                  itemBuilder: (_) => [
-                    PopupMenuItem(
-                      value: 'bookmarks',
-                      child: Text(AppLocalizations.of(context)!.bookmarks),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final isWide = width > 600;
+        if (_lastWidth == null || (width > 600) != (_lastWidth! > 600)) {
+          if (_doublePage != isWide) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              setState(() {
+                _doublePage = isWide;
+                final newPage = (_currentPage / (_doublePage ? 2 : 1)).floor();
+                _controller = PageController(initialPage: newPage);
+                _currentPage = newPage;
+              });
+            });
+          }
+        }
+        _lastWidth = width;
+
+        return Scaffold(
+          appBar: _showUI
+              ? AppBar(
+                  title: Text(_book.title),
+                  actions: [
+                    IconButton(
+                      icon: Icon(
+                        _isRtl
+                            ? Icons.format_textdirection_r_to_l
+                            : Icons.format_textdirection_l_to_r,
+                      ),
+                      onPressed: () => setState(() => _isRtl = !_isRtl),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                      ),
+                      onPressed: _toggleBookmark,
+                    ),
+                    IconButton(
+                      icon: Icon(_doublePage ? Icons.filter_1 : Icons.filter_2),
+                      onPressed: () => setState(() {
+                        _doublePage = !_doublePage;
+                        final newPage = (_currentPage / (_doublePage ? 2 : 1))
+                            .floor();
+                        _controller = PageController(initialPage: newPage);
+                        _currentPage = newPage;
+                      }),
+                    ),
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'bookmarks') _openBookmarks();
+                      },
+                      itemBuilder: (_) => [
+                        PopupMenuItem(
+                          value: 'bookmarks',
+                          child: Text(AppLocalizations.of(context)!.bookmarks),
+                        ),
+                      ],
                     ),
                   ],
+                )
+              : null,
+          body: Directionality(
+            textDirection: _isRtl ? TextDirection.rtl : TextDirection.ltr,
+            child: Stack(
+              children: [
+                PageView.builder(
+                  controller: _controller,
+                  itemCount: _pageCount,
+                  onPageChanged: _onPageChanged,
+                  itemBuilder: (context, index) => _buildPage(index),
                 ),
+                Positioned.fill(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          key: const Key('previous_page_zone'),
+                          behavior: HitTestBehavior.translucent,
+                          onTap: () => _controller.previousPage(
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeInOut,
+                          ),
+                        ),
+                      ),
+                      const Expanded(child: SizedBox.shrink()),
+                      Expanded(
+                        child: GestureDetector(
+                          key: const Key('next_page_zone'),
+                          behavior: HitTestBehavior.translucent,
+                          onTap: () => _controller.nextPage(
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeInOut,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned.fill(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onTap: () => setState(() => _showUI = !_showUI),
+                  ),
+                ),
+                if (_showUI)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Slider(
+                      value: _currentPage.toDouble(),
+                      min: 0,
+                      max: max(0, _pageCount - 1).toDouble(),
+                      onChanged: (v) {
+                        setState(() {
+                          _currentPage = v.round();
+                          _controller.jumpToPage(_currentPage);
+                        });
+                      },
+                    ),
+                  ),
               ],
-            )
-          : null,
-      body: Directionality(
-        textDirection: _isRtl ? TextDirection.rtl : TextDirection.ltr,
-        child: Stack(
-          children: [
-            PageView.builder(
-              controller: _controller,
-              itemCount: _pageCount,
-              onPageChanged: _onPageChanged,
-              itemBuilder: (context, index) => _buildPage(index),
             ),
-            Positioned.fill(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      key: const Key('previous_page_zone'),
-                      behavior: HitTestBehavior.translucent,
-                      onTap: () => _controller.previousPage(
-                        duration: const Duration(milliseconds: 200),
-                        curve: Curves.easeInOut,
-                      ),
-                    ),
-                  ),
-                  const Expanded(child: SizedBox.shrink()),
-                  Expanded(
-                    child: GestureDetector(
-                      key: const Key('next_page_zone'),
-                      behavior: HitTestBehavior.translucent,
-                      onTap: () => _controller.nextPage(
-                        duration: const Duration(milliseconds: 200),
-                        curve: Curves.easeInOut,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Positioned.fill(
-              child: GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onTap: () => setState(() => _showUI = !_showUI),
-              ),
-            ),
-            if (_showUI)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: Slider(
-                  value: _currentPage.toDouble(),
-                  min: 0,
-                  max: max(0, _pageCount - 1).toDouble(),
-                  onChanged: (v) {
-                    setState(() {
-                      _currentPage = v.round();
-                      _controller.jumpToPage(_currentPage);
-                    });
-                  },
-                ),
-              ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
