@@ -7,7 +7,6 @@ import 'package:path_provider_platform_interface/path_provider_platform_interfac
 import 'package:mana_reader/models/book_model.dart';
 import 'package:mana_reader/screens/library_screen.dart';
 import 'package:mana_reader/database/db_helper.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class _FakePathProviderPlatform extends PathProviderPlatform {
   final Directory tempDir =
@@ -110,9 +109,6 @@ void main() {
 
   testWidgets('filters by language', (tester) async {
     final fakeDb = DbHelper();
-    // Initialize ffi for db usage
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
     PathProviderPlatform.instance = _FakePathProviderPlatform();
     await fakeDb.insertBook(BookModel(title: 'EN', path: '/tmp/en.cbz', language: 'en'));
     await fakeDb.insertBook(BookModel(title: 'JP', path: '/tmp/jp.cbz', language: 'jp'));
@@ -166,8 +162,6 @@ void main() {
 
   testWidgets('filters by multiple tags', (tester) async {
     final fakeDb = DbHelper();
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
     PathProviderPlatform.instance = _FakePathProviderPlatform();
     await fakeDb.insertBook(BookModel(
         title: 'A', path: '/tmp/a.cbz', language: 'en', tags: ['a']));

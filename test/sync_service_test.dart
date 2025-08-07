@@ -7,7 +7,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mana_reader/importers/seven_zip_importer.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:archive/archive.dart';
 import 'package:native_pdf_renderer/native_pdf_renderer.dart';
 import 'package:native_pdf_renderer/src/renderer/interfaces/platform.dart';
@@ -111,8 +110,6 @@ class _FakePathProviderPlatform extends PathProviderPlatform {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  sqfliteFfiInit();
-  databaseFactory = databaseFactoryFfi;
   PathProviderPlatform.instance = _FakePathProviderPlatform();
 
   const imgData = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=';
