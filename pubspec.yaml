@@ -4,26 +4,23 @@ publish_to: 'none'
 version: 0.1.0
 
 environment:
-  sdk: '>=2.17.0 <3.0.0'
+  sdk: '>=3.3.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-
-  sqflite: ^2.3.2
   path_provider: ^2.1.1
-
-  path: 1.9.1
-
-  http: ^0.13.6
-  file_picker: 3.0.4
-  archive: ^3.3.7
-  rar: ^0.1.0
-  pdf_render: ^1.4.12
-  permission_handler: ^10.4.3
+  path: ^1.9.0
+  http: ^1.1.0
+  archive: ^4.0.7
+  file_selector: ^1.0.3
+  permission_handler: ^12.0.1
+  sqflite: ^2.3.2
+  sqflite_common_ffi: ^2.3.0
   flutter_localizations:
     sdk: flutter
   intl: ^0.20.2
+  native_pdf_renderer: ^6.0.0
 
 
 
@@ -32,14 +29,8 @@ dev_dependencies:
     sdk: flutter
   integration_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
-  sqflite_common_ffi: ^2.3.0
-  path_provider_platform_interface: any
-  pdf_render_platform_interface: any
+  flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
   generate: true
-
-dependency_overrides:
-  plugin_platform_interface: ^2.1.8
