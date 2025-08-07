@@ -364,14 +364,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.0.3"
-  rar:
-    dependency: "direct main"
-    description:
-      name: rar
-      sha256: "7b8a006a35903cc0fb36eaf37af7857c7e0484211211c7d66db74c22019d24fc"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.0"
   sky_engine:
     dependency: transitive
     description: flutter
