@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../database/db_helper.dart';
-import '../models/book_model.dart';
 import '../l10n/app_localizations.dart';
-import 'history_screen.dart';
-import 'library_screen.dart';
-import 'reader_screen.dart';
+import '../models/book_model.dart';
 
 /// Simple start screen offering navigation to major sections.
 class MainMenu extends StatelessWidget {
@@ -34,29 +32,18 @@ class MainMenu extends StatelessWidget {
                 if (book != null)
                   ElevatedButton(
                     key: const Key('continue_reading_button'),
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ReaderScreen(book: book),
-                      ),
-                    ),
+                    onPressed: () => context.push('/reader', extra: book),
                     child:
                         Text(AppLocalizations.of(context)!.continueReading),
                   ),
                 if (book != null) const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const LibraryScreen()),
-                  ),
+                  onPressed: () => context.push('/library'),
                   child: Text(AppLocalizations.of(context)!.library),
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => HistoryScreen()),
-                  ),
+                  onPressed: () => context.push('/history'),
                   child: Text(AppLocalizations.of(context)!.history),
                 ),
               ],

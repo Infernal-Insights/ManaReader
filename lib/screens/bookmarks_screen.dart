@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../l10n/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 
 import '../database/db_helper.dart';
+import '../l10n/app_localizations.dart';
 import '../models/book_model.dart';
 
 /// Lists bookmarked pages for a book and returns the selected page index.
@@ -35,7 +36,7 @@ class BookmarksScreen extends StatelessWidget {
                       title: Text(
                         AppLocalizations.of(context)!.pageWithNumber(p + 1),
                       ),
-                      onTap: () => Navigator.pop(context, p),
+                      onTap: () => context.pop(p),
                     );
                   },
                 );

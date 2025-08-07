@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../l10n/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 
 import '../database/db_helper.dart';
+import '../l10n/app_localizations.dart';
 import '../models/book_model.dart';
 
 /// Displays and edits metadata for a [BookModel].
@@ -54,7 +55,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
       pages: widget.book.pages,
     );
     await DbHelper.instance.updateBook(updated);
-    if (mounted) Navigator.pop(context, updated);
+    if (mounted) context.pop(updated);
   }
 
   @override

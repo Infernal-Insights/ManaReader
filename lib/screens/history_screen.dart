@@ -1,11 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import '../l10n/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 
 import '../database/db_helper.dart';
+import '../l10n/app_localizations.dart';
 import '../models/book_model.dart';
-import 'reader_screen.dart';
 
 /// Lists books sorted by recent reading history.
 class HistoryScreen extends StatelessWidget {
@@ -130,12 +130,7 @@ class HistoryScreen extends StatelessWidget {
                     );
                   },
                 ),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ReaderScreen(book: book),
-                  ),
-                ),
+                onTap: () => context.push('/reader', extra: book),
               );
             },
           );
