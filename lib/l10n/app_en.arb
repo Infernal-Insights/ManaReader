@@ -33,5 +33,7 @@
   "fitWidth": "Fit Width",
   "clear": "Clear",
   "pageLoadFailed": "Failed to load page {page}",
-  "continueReading": "Continue Reading"
+  "continueReading": "Continue Reading",
+  "importFile": "Import File",
+  "syncDirectory": "Sync Directory"
 }

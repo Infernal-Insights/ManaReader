@@ -138,6 +138,27 @@ class _LibraryScreenState extends State<LibraryScreen> {
         lower.endsWith('.gif');
   }
 
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(AppLocalizations.of(context)!.noBooks),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _pickAndImport,
+            child: Text(AppLocalizations.of(context)!.importFile),
+          ),
+          const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: _syncDirectory,
+            child: Text(AppLocalizations.of(context)!.syncDirectory),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -197,7 +218,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           }
           final books = snapshot.data!;
           if (books.isEmpty) {
-            return Center(child: Text(AppLocalizations.of(context)!.noBooks));
+            return _buildEmptyState();
           }
           Widget listWidget;
           if (_isGrid) {
