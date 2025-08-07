@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 import '../models/book_model.dart';
 import '../metadata/metadata_service.dart';
@@ -25,6 +27,12 @@ class DbHelper {
   }
 
   Future<Database> _initDb() async {
+    if (kIsWeb) {
+      databaseFactory = databaseFactoryFfiWeb;
+    } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+    }
     final documentsDir = await getApplicationDocumentsDirectory();
     final path = p.join(documentsDir.path, 'mana_reader.db');
     return openDatabase(

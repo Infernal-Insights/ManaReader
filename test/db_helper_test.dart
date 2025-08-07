@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:mana_reader/database/db_helper.dart';
 import 'package:mana_reader/models/book_model.dart';
@@ -28,8 +27,6 @@ class _FakeMetadataService extends MetadataService {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  sqfliteFfiInit();
-  databaseFactory = databaseFactoryFfi;
   PathProviderPlatform.instance = _FakePathProviderPlatform();
 
   group('DbHelper', () {
