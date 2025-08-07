@@ -6,14 +6,12 @@ import 'dart:ui' as ui;
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:archive/archive.dart';
 import 'package:pdf_render_platform_interface/pdf_render.dart';
 import 'package:pdf_render_platform_interface/pdf_render_platform_interface.dart';
 
-import 'package:mana_reader/importers/rar_importer.dart';
 import 'package:mana_reader/importers/seven_zip_importer.dart';
 import 'package:mana_reader/importers/pdf_importer.dart';
 
@@ -144,43 +142,6 @@ void main() {
   PathProviderPlatform.instance = _FakePathProviderPlatform();
 
   group('Archive importers', () {
-    test('RarImporter extracts images from archive', () async {
-      const channel = MethodChannel('com.lkrjangid.rar');
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, (call) async {
-            if (call.method == 'extractRarFile') {
-              final bytes = File(
-                call.arguments['rarFilePath'] as String,
-              ).readAsBytesSync();
-              final archive = ZipDecoder().decodeBytes(bytes);
-              final dest = call.arguments['destinationPath'] as String;
-              for (final f in archive) {
-                if (f.isFile) {
-                  final out = File(p.join(dest, f.name))
-                    ..createSync(recursive: true);
-                  out.writeAsBytesSync(f.content as List<int>);
-                }
-              }
-              return {'success': true, 'message': 'ok'};
-            }
-            return null;
-          });
-
-      final tmp = Directory.systemTemp.createTempSync();
-      final img = base64Decode(
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAA C0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=',
-      );
-      final archive = Archive()..addFile(ArchiveFile('a.png', img.length, img));
-      final bytes = ZipEncoder().encode(archive)!;
-      final rarPath = p.join(tmp.path, 't.cbr');
-      File(rarPath).writeAsBytesSync(bytes);
-
-      final importer = RarImporter();
-      final book = await importer.import(rarPath);
-      expect(book.pages.length, 1);
-      expect(File(book.pages.first).existsSync(), isTrue);
-    });
-
     test('SevenZipImporter extracts images using mocked Process.run', () async {
       processRun = (String exe, List<String> args) async {
         if (exe == 'which' || exe == 'where') {

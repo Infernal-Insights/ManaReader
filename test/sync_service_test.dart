@@ -5,7 +5,6 @@ import 'dart:ffi';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mana_reader/importers/seven_zip_importer.dart';
 import 'package:path/path.dart' as p;
@@ -161,21 +160,6 @@ void main() {
       throw UnsupportedError(exe);
     };
 
-    const MethodChannel('com.lkrjangid.rar').setMockMethodCallHandler((call) async {
-      if (call.method == 'extractRarFile') {
-        final bytes = File(call.arguments['rarFilePath'] as String).readAsBytesSync();
-        final archive = ZipDecoder().decodeBytes(bytes);
-        final dest = call.arguments['destinationPath'] as String;
-        for (final f in archive) {
-          if (f.isFile) {
-            final out = File(p.join(dest, f.name))..createSync(recursive: true);
-            out.writeAsBytesSync(f.content as List<int>);
-          }
-        }
-        return {'success': true, 'message': 'ok'};
-      }
-      return null;
-    });
   });
 
   test('syncDirectoryPath imports all archives', () async {
@@ -186,7 +170,6 @@ void main() {
     final zipArchive = Archive()..addFile(ArchiveFile('a.png', img.length, img));
     final zipBytes = ZipEncoder().encode(zipArchive)!;
     File(p.join(tmp.path, 'a.cbz')).writeAsBytesSync(zipBytes);
-    File(p.join(tmp.path, 'b.cbr')).writeAsBytesSync(zipBytes);
     File(p.join(tmp.path, 'c.cb7')).writeAsBytesSync(zipBytes);
     File(p.join(tmp.path, 'd.7z')).writeAsBytesSync(zipBytes);
 
@@ -197,6 +180,6 @@ void main() {
     final success = await syncDirectoryPath(tmp.path, dbHelper: db);
     expect(success, isTrue);
     final books = await db.fetchBooks();
-    expect(books, hasLength(5));
+    expect(books, hasLength(4));
   });
 }

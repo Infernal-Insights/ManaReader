@@ -27,7 +27,6 @@ Future<bool> syncDirectoryPath(String dirPath, {DbHelper? dbHelper}) async {
     if (entity is! File) continue;
     final lower = entity.path.toLowerCase();
     if (!(lower.endsWith('.cbz') ||
-        lower.endsWith('.cbr') ||
         lower.endsWith('.cb7') ||
         lower.endsWith('.7z') ||
         lower.endsWith('.pdf'))) {
