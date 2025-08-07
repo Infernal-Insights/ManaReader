@@ -576,22 +576,67 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Future<bool> _requestStoragePermission() async {
-    var status = await Permission.storage.request();
-    if (status.isGranted) return true;
-    status = await Permission.photos.request();
-    if (status.isGranted) return true;
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Storage permission denied')),
-      );
+    if (Platform.isAndroid) {
+      var status = await Permission.photos.request();
+      if (status.isGranted) return true;
+      if (status.isPermanentlyDenied) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Photo access permanently denied. Please enable it in settings.',
+              ),
+            ),
+          );
+        }
+        return false;
+      }
+
+      status = await Permission.manageExternalStorage.request();
+      if (status.isGranted) return true;
+      if (status.isPermanentlyDenied) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Storage permission permanently denied. Please enable it in settings.',
+              ),
+            ),
+          );
+        }
+        return false;
+      }
+
+      status = await Permission.storage.request();
+      if (status.isGranted) return true;
+
+      if (mounted) {
+        final message = status.isPermanentlyDenied
+            ? 'Storage permission permanently denied. Please enable it in settings.'
+            : 'Storage permission denied';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
+      return false;
+    } else {
+      final status = await Permission.photos.request();
+      if (status.isGranted) return true;
+      if (mounted) {
+        final message = status.isPermanentlyDenied
+            ? 'Photo access permanently denied. Please enable it in settings.'
+            : 'Photo access denied';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
+      return false;
     }
-    return false;
   }
 
   Future<void> _pickAndImport() async {
     if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
       if (!await _requestStoragePermission()) return;
-      if (!mounted) return;
     }
     if (!mounted) return;
     final XFile? file = await openFile();
@@ -618,7 +663,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
   Future<void> _syncDirectory() async {
     if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
       if (!await _requestStoragePermission()) return;
-      if (!mounted) return;
     }
     if (!mounted) return;
     final String? path = await getDirectoryPath();
