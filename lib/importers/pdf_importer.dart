@@ -1,7 +1,6 @@
 import 'dart:io';
-import 'dart:ui' as ui;
 
-import 'package:pdf_render/pdf_render.dart';
+import 'package:native_pdf_renderer/native_pdf_renderer.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -15,21 +14,21 @@ class PdfImporter extends Importer {
     final baseName = p.basenameWithoutExtension(filePath);
     final destDir = await _createDestDir(baseName);
     final pages = <String>[];
-    for (var i = 1; i <= doc.pageCount; i++) {
+    for (var i = 1; i <= doc.pagesCount; i++) {
       final page = await doc.getPage(i);
       final img = await page.render(
-          width: page.width.toInt(), height: page.height.toInt());
-      final ui.Image image = await img.createImageIfNotAvailable();
-      final bytes =
-          (await image.toByteData(format: ui.ImageByteFormat.png))!.buffer.asUint8List();
-      image.dispose();
-      final imagePath = p.join(destDir.path, '${i.toString().padLeft(4, '0')}.png');
+        width: page.width,
+        height: page.height,
+        format: PdfPageImageFormat.png,
+      );
+      final imagePath =
+          p.join(destDir.path, '${i.toString().padLeft(4, '0')}.png');
       final file = File(imagePath);
-      await file.writeAsBytes(bytes);
+      await file.writeAsBytes(img!.bytes);
       pages.add(imagePath);
-      img.dispose();
+      await page.close();
     }
-    await doc.dispose();
+    await doc.close();
     return BookModel(
       title: baseName,
       path: destDir.path,
