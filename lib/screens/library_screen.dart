@@ -3,19 +3,17 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../l10n/app_localizations.dart';
-import '../database/db_helper.dart';
-import '../models/book_model.dart';
+import 'package:go_router/go_router.dart';
 
+import '../database/db_helper.dart';
 import '../import/importer.dart';
 import '../import/sync_service.dart';
+import '../l10n/app_localizations.dart';
+import '../models/book_model.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'book_detail_screen.dart';
-import 'history_screen.dart';
-import 'reader_screen.dart';
 
 /// Displays the list of imported books.
 class LibraryScreen extends StatefulWidget {
@@ -50,10 +48,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   String _sortOrder = 'title';
 
   void _openHistory() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => HistoryScreen()),
-    );
+    context.push('/history');
   }
 
   @override
@@ -234,10 +229,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               itemBuilder: (context, index) {
                 final book = books[index];
                 return GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => ReaderScreen(book: book)),
-                  ),
+                  onTap: () => context.push('/reader', extra: book),
                   onLongPress: () => _confirmDelete(book),
                   child: GridTile(
                     child: Stack(
@@ -400,10 +392,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       ),
                     ],
                   ),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => ReaderScreen(book: book)),
-                  ),
+                  onTap: () => context.push('/reader', extra: book),
                   onLongPress: () => _confirmDelete(book),
                 );
               },
@@ -550,11 +539,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
         content: Text(AppLocalizations.of(context)!.deleteConfirm(book.title)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => context.pop(false),
             child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => context.pop(true),
             child: Text(AppLocalizations.of(context)!.delete),
           ),
         ],
@@ -568,10 +557,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Future<void> _openDetails(BookModel book) async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => BookDetailScreen(book: book)),
-    );
+    await context.push('/book', extra: book);
     if (mounted) _loadBooks();
   }
 

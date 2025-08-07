@@ -9,6 +9,8 @@ import 'package:path/path.dart' as p;
 
 import 'package:mana_reader/models/book_model.dart';
 import 'package:mana_reader/screens/reader_screen.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mana_reader/screens/bookmarks_screen.dart';
 
 void main() {
   testWidgets('displays book title and page view', (tester) async {
@@ -91,11 +93,23 @@ void main() {
     File(imgPath).writeAsBytesSync(base64Decode(
         'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII='));
     final book = BookModel(title: 'Read', path: dir.path, language: 'en', pages: [imgPath]);
-    await tester.pumpWidget(MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: ReaderScreen(book: book),
-    ));
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => ReaderScreen(book: book),
+        ),
+        GoRoute(
+          path: '/bookmarks',
+          builder: (context, state) {
+            final b = state.extra as BookModel;
+            return BookmarksScreen(book: b);
+          },
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();

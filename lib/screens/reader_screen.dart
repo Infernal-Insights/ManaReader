@@ -2,11 +2,11 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import '../l10n/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 
 import '../database/db_helper.dart';
+import '../l10n/app_localizations.dart';
 import '../models/book_model.dart';
-import 'bookmarks_screen.dart';
 
 /// Displays the pages of a book using [PageView] and remembers the last page
 /// read. Supports left-to-right or right-to-left reading direction, pinch zoom
@@ -218,31 +218,23 @@ class _ReaderScreenState extends State<ReaderScreen> {
           if (next != null)
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => ReaderScreen(book: next!)),
-                );
+                context.pop();
+                context.pushReplacement('/reader', extra: next!);
               },
               child: Text(AppLocalizations.of(context)!.nextRelated),
             ),
           if (random != null)
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ReaderScreen(book: random!),
-                  ),
-                );
+                context.pop();
+                context.pushReplacement('/reader', extra: random!);
               },
               child: Text(AppLocalizations.of(context)!.randomUnread),
             ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
+              context.pop();
+              context.pop();
             },
             child: Text(AppLocalizations.of(context)!.library),
           ),
@@ -252,10 +244,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   Future<void> _openBookmarks() async {
-    final page = await Navigator.push<int>(
-      context,
-      MaterialPageRoute(builder: (_) => BookmarksScreen(book: _book)),
-    );
+    final page = await context.push<int>('/bookmarks', extra: _book);
     if (page != null && mounted) {
       final index = _doublePage ? (page / 2).floor() : page;
       _controller.jumpToPage(index);

@@ -7,6 +7,8 @@ import 'package:path_provider_platform_interface/path_provider_platform_interfac
 import 'package:mana_reader/models/book_model.dart';
 import 'package:mana_reader/screens/library_screen.dart';
 import 'package:mana_reader/database/db_helper.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mana_reader/screens/book_detail_screen.dart';
 
 class _FakePathProviderPlatform extends PathProviderPlatform {
   final Directory tempDir =
@@ -93,10 +95,33 @@ void main() {
     final books = [
       BookModel(id: 1, title: 'E', path: '/tmp/e.cbz', language: 'en')
     ];
-    await tester.pumpWidget(MaterialApp(
-      home: LibraryScreen(
-          fetchBooks: ({tags, author, language, unread, favorite, query, orderBy}) async => books),
-    ));
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => LibraryScreen(
+            fetchBooks: ({
+              tags,
+              author,
+              language,
+              unread,
+              favorite,
+              query,
+              orderBy,
+            }) async => books,
+          ),
+        ),
+        GoRoute(
+          path: '/book',
+          builder: (context, state) {
+            final book = state.extra as BookModel;
+            return BookDetailScreen(book: book);
+          },
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byIcon(Icons.more_vert).first);
