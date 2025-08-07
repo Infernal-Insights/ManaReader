@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import 'database/db_helper.dart';
@@ -24,18 +23,12 @@ class ManaReaderApp extends StatefulWidget {
 class _ManaReaderAppState extends State<ManaReaderApp> {
   late final GoRouter _router = GoRouter(
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const MainMenu(),
-      ),
+      GoRoute(path: '/', builder: (context, state) => const MainMenu()),
       GoRoute(
         path: '/library',
         builder: (context, state) => const LibraryScreen(),
       ),
-      GoRoute(
-        path: '/history',
-        builder: (context, state) => HistoryScreen(),
-      ),
+      GoRoute(path: '/history', builder: (context, state) => HistoryScreen()),
       GoRoute(
         path: '/reader',
         builder: (context, state) {
