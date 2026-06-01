@@ -6,10 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../app/providers.dart';
 import '../../core/db/database.dart';
 import '../../core/source/google_drive_source.dart';
 import '../../core/sync/sync_engine.dart';
-import '../reader/reader_controller.dart';
 
 class AddDriveSourceScreen extends ConsumerStatefulWidget {
   const AddDriveSourceScreen({super.key});

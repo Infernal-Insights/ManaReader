@@ -92,7 +92,8 @@ GoRouter buildRouter() {
       GoRoute(
         path: '/reader/:seriesId',
         builder: (context, state) {
-          final seriesId = state.pathParameters['seriesId']!;
+          final seriesId = state.pathParameters['seriesId'];
+          if (seriesId == null) return const SizedBox.shrink();
           final startPage = int.tryParse(state.uri.queryParameters['page'] ?? '0') ?? 0;
           return ReaderScreen(seriesId: seriesId, initialPage: startPage);
         },

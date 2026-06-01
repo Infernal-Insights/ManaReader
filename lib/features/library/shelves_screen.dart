@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../app/providers.dart';
 import '../../core/db/database.dart';
-import '../reader/reader_controller.dart';
 import 'library_controller.dart';
 
 class ShelvesScreen extends ConsumerWidget {

@@ -8,12 +8,11 @@ import 'package:go_router/go_router.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
+import '../../app/providers.dart';
 import '../../core/db/database.dart';
 import '../../core/source/local_folder_source.dart';
+import '../../core/sync/import_service.dart';
 import '../../core/sync/sync_engine.dart';
-import '../../core/series/series_grouper.dart';
-import '../../core/archive/archive_factory.dart';
-import '../reader/reader_controller.dart';
 
 class AddLocalSourceScreen extends ConsumerStatefulWidget {
   const AddLocalSourceScreen({super.key});
@@ -91,37 +90,7 @@ class _AddLocalSourceScreenState
 
       // Import series metadata
       final items = await source.listItems();
-      for (final item in items) {
-        try {
-          final archive = ArchiveFactory.fromPath(item.id);
-          final meta = archive.metadata;
-          await archive.dispose();
-
-          final seriesTitle = meta.series?.isNotEmpty == true
-              ? meta.series!
-              : SeriesGrouper.extract(item.title)?.series ?? item.title;
-          final sid = SeriesGrouper.seriesId(seriesTitle);
-
-          await db.seriesDao.upsert(SeriesCompanion(
-            id: Value(sid),
-            title: Value(seriesTitle),
-            author: Value(meta.author),
-            sortKey: Value(seriesTitle.toLowerCase()),
-          ));
-
-          await db.manifestDao.upsert(SyncManifestCompanion(
-            id: Value(item.id),
-            sourceId: Value(sourceId),
-            remotePath: Value(item.id),
-            localPath: Value(item.id),
-            cacheState: const Value('cached'),
-            seriesId: Value(sid),
-            lastSynced: Value(DateTime.now()),
-          ));
-        } catch (_) {
-          // Skip unreadable files
-        }
-      }
+      await ImportService(db).importItems(items, sourceId);
 
       if (mounted) {
         context.pop();

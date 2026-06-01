@@ -3,20 +3,11 @@ import 'dart:typed_data';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/providers.dart';
 import '../../core/archive/comic_archive.dart';
 import '../../core/archive/archive_factory.dart';
 import '../../core/db/database.dart';
 import 'reader_settings.dart';
-
-// ---------------------------------------------------------------------------
-// Providers
-// ---------------------------------------------------------------------------
-
-final appDatabaseProvider = Provider<AppDatabase>((ref) {
-  final db = AppDatabase();
-  ref.onDispose(db.close);
-  return db;
-});
 
 // ---------------------------------------------------------------------------
 // Reader state
@@ -91,7 +82,9 @@ class ReaderController extends StateNotifier<AsyncValue<ReaderState>> {
       final path = item.localPath ?? item.remotePath;
 
       _archive = ArchiveFactory.fromPath(path);
-      final count = await _archive!.pageCount;
+      final archive = _archive;
+      if (archive == null) throw Exception('Archive not initialized');
+      final count = await archive.pageCount;
 
       // Load saved progress
       final progress = await _db.progressDao.getProgress(_seriesId);
@@ -115,7 +108,9 @@ class ReaderController extends StateNotifier<AsyncValue<ReaderState>> {
   Future<Uint8List?> getPageBytes(int index) async {
     if (_pageCache.containsKey(index)) return _pageCache[index];
     try {
-      final page = await _archive!.getPage(index);
+      final archive = _archive;
+      if (archive == null) return null;
+      final page = await archive.getPage(index);
       _pageCache[index] = page.bytes;
       return page.bytes;
     } catch (_) {

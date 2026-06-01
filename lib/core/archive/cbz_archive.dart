@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
 import 'comic_archive.dart';
@@ -13,7 +14,7 @@ class CbzArchive implements ComicArchive {
   final String _filePath;
   late Archive _archive;
   late List<ArchiveFile> _imageFiles;
-  late ArchiveMetadata _metadata;
+  ArchiveMetadata _metadata = const ArchiveMetadata(title: '');
   bool _initialized = false;
 
   CbzArchive(this._filePath);
@@ -40,7 +41,9 @@ class CbzArchive implements ComicArchive {
       try {
         final xml = String.fromCharCodes(comicInfoFile.content as List<int>);
         parsedMeta = ComicInfoParser.parse(xml);
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('ComicInfo.xml parse error: $e');
+      }
     }
 
     _metadata = parsedMeta ??

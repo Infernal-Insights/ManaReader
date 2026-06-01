@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/providers.dart';
 import '../../core/db/database.dart';
 import '../library/library_controller.dart';
 import '../library/series_card.dart';
-import '../reader/reader_controller.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
