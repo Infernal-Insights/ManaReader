@@ -1,79 +1,84 @@
-import 'dart:convert';
+// Sync engine tests updated for new architecture.
 import 'dart:io';
 
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mana_reader/importers/seven_zip_importer.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
-import 'package:archive/archive.dart';
 
-import 'package:mana_reader/import/sync_service.dart';
-import 'package:mana_reader/database/db_helper.dart';
+import 'package:mana_reader/core/db/database.dart';
+import 'package:mana_reader/core/source/content_source.dart';
+import 'package:mana_reader/core/source/local_folder_source.dart';
+import 'package:mana_reader/core/sync/sync_engine.dart';
 
-class _FakePathProviderPlatform extends PathProviderPlatform {
-  final Directory tempDir = Directory.systemTemp.createTempSync(
-    'mana_reader_test',
-  );
-
-  @override
-  Future<String?> getApplicationDocumentsPath() async => tempDir.path;
-}
+AppDatabase _makeDb() => AppDatabase.forTesting(NativeDatabase.memory());
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  PathProviderPlatform.instance = _FakePathProviderPlatform();
 
-  const imgData =
-      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAiMB7g6lbYkAAAAASUVORK5CYII=';
+  group('SyncEngine', () {
+    late Directory tempDir;
 
-  setUp(() {
-    PathProviderPlatform.instance = _FakePathProviderPlatform();
-    processRun = (String exe, List<String> args) async {
-      if (exe == 'which' || exe == 'where') {
-        return ProcessResult(0, 0, '', '');
-      }
-      if (exe == '7z') {
-        final archivePath = args[1];
-        var destArg = args[2];
-        if (destArg.startsWith('-o')) {
-          destArg = destArg.substring(2);
-        }
-        final bytes = File(archivePath).readAsBytesSync();
-        final archive = ZipDecoder().decodeBytes(bytes);
-        for (final f in archive) {
-          if (f.isFile) {
-            final out = File(p.join(destArg, f.name))
-              ..createSync(recursive: true);
-            out.writeAsBytesSync(f.content as List<int>);
-          }
-        }
-        return ProcessResult(0, 0, '', '');
-      }
-      throw UnsupportedError(exe);
-    };
-  });
+    setUp(() {
+      tempDir = Directory.systemTemp.createTempSync('sync_test');
+    });
 
-  test('syncDirectoryPath imports all archives', () async {
-    final tmp = Directory.systemTemp.createTempSync();
-    final img = base64Decode(imgData);
+    tearDown(() => tempDir.deleteSync(recursive: true));
 
-    // Create zip archive
-    final zipArchive = Archive()
-      ..addFile(ArchiveFile('a.png', img.length, img));
-    final zipBytes = ZipEncoder().encode(zipArchive)!;
-    File(p.join(tmp.path, 'a.cbz')).writeAsBytesSync(zipBytes);
-    File(p.join(tmp.path, 'c.cb7')).writeAsBytesSync(zipBytes);
-    File(p.join(tmp.path, 'd.7z')).writeAsBytesSync(zipBytes);
+    test('sync adds new items to manifest', () async {
+      // Create a fake .cbz file
+      final file = File(p.join(tempDir.path, 'comic.cbz'));
+      file.writeAsBytesSync([]);
 
-    final pdfData = base64Decode(
-      'JVBERi0xLjEKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBvYmo8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iagozIDAgb2JqPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9NZWRpYUJveFswIDAgNjEyIDc5Ml0+PmVuZG9iagp0cmFpbGVyPDwvUm9vdCAxIDAgUi9TaXplIDQ+PgolJUVPRg==',
-    );
-    File(p.join(tmp.path, 'e.pdf')).writeAsBytesSync(pdfData);
+      final db = _makeDb();
+      final source = LocalFolderSource(id: 'src1', folderPath: tempDir.path);
+      final engine = SyncEngine(db);
 
-    final db = DbHelper();
-    final success = await syncDirectoryPath(tmp.path, dbHelper: db);
-    expect(success, isTrue);
-    final books = await db.fetchBooks();
-    expect(books, hasLength(4));
+      final result = await engine.sync(source);
+      expect(result.added, greaterThanOrEqualTo(1));
+
+      final items = await db.manifestDao.bySource('src1');
+      expect(items, isNotEmpty);
+
+      await db.close();
+    });
+
+    test('deleteItem sets userDeleted tombstone', () async {
+      final db = _makeDb();
+      await db.manifestDao.upsert(SyncManifestCompanion(
+        id: const Value('item1'),
+        sourceId: const Value('src1'),
+        remotePath: const Value('/r/comic.cbz'),
+        cacheState: const Value('remote'),
+      ));
+
+      final engine = SyncEngine(db);
+      await engine.deleteItem('item1');
+
+      final row = await db.manifestDao.getById('item1');
+      expect(row!.userDeleted, isTrue);
+
+      await db.close();
+    });
+
+    test('deleted items are not re-synced', () async {
+      final file = File(p.join(tempDir.path, 'deleted.cbz'));
+      file.writeAsBytesSync([]);
+
+      final db = _makeDb();
+      final source = LocalFolderSource(id: 'src1', folderPath: tempDir.path);
+      final engine = SyncEngine(db);
+
+      // First sync - item appears
+      await engine.sync(source);
+      // Mark as user-deleted
+      await engine.deleteItem(file.path);
+
+      // Second sync - item should not be re-added
+      final result2 = await engine.sync(source);
+      expect(result2.added, 0);
+
+      await db.close();
+    });
   });
 }

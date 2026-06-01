@@ -1,49 +1,44 @@
-import 'package:flutter/foundation.dart';
+// Metadata provider tests updated for new architecture.
+// ComicInfo.xml parsing tests.
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
-
-import 'package:mana_reader/metadata/anilist_provider.dart';
-import 'package:mana_reader/metadata/doujindb_provider.dart';
-import 'package:mana_reader/metadata/metadata_provider.dart';
+import 'package:mana_reader/core/comicinfo/comic_info_parser.dart';
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  group('ComicInfoParser', () {
+    test('parses basic ComicInfo.xml', () {
+      const xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<ComicInfo>
+  <Title>My Comic</Title>
+  <Series>My Series</Series>
+  <Number>5</Number>
+  <Volume>1</Volume>
+  <Writer>Test Author</Writer>
+  <LanguageISO>en</LanguageISO>
+  <Genre>Action, Adventure</Genre>
+</ComicInfo>''';
 
-  Future<void> checkTimeout(MetadataProvider provider) async {
-    final messages = <String?>[];
-    final orig = debugPrint;
-    debugPrint = (String? message, {int? wrapWidth}) {
-      messages.add(message);
-    };
-    addTearDown(() => debugPrint = orig);
-
-    final result = await provider.search('query');
-    expect(result, isNull);
-    expect(messages.any((m) => m?.contains('timeout') ?? false), isTrue);
-  }
-
-  test('AniListProvider logs timeout', () async {
-    final client = MockClient((request) async {
-      await Future.delayed(const Duration(milliseconds: 100));
-      return http.Response('{}', 200);
+      final meta = ComicInfoParser.parse(xml);
+      expect(meta.title, 'My Comic');
+      expect(meta.series, 'My Series');
+      expect(meta.chapter, 5);
+      expect(meta.volume, 1);
+      expect(meta.author, 'Test Author');
+      expect(meta.language, 'en');
+      expect(meta.tags, containsAll(['Action', 'Adventure']));
     });
-    final provider = AniListProvider(
-      client: client,
-      timeout: const Duration(milliseconds: 10),
-    );
-    await checkTimeout(provider);
-  });
 
-  test('DoujinDbProvider logs timeout', () async {
-    final client = MockClient((request) async {
-      await Future.delayed(const Duration(milliseconds: 100));
-      return http.Response('{}', 200);
+    test('returns empty metadata for invalid xml', () {
+      const xml = '<NotComicInfo/>';
+      final meta = ComicInfoParser.parse(xml);
+      expect(meta.title, isEmpty);
     });
-    final provider = DoujinDbProvider(
-      client: client,
-      timeout: const Duration(milliseconds: 10),
-    );
-    await checkTimeout(provider);
+
+    test('handles missing optional fields gracefully', () {
+      const xml = '''<ComicInfo><Title>Only Title</Title></ComicInfo>''';
+      final meta = ComicInfoParser.parse(xml);
+      expect(meta.title, 'Only Title');
+      expect(meta.author, isNull);
+      expect(meta.tags, isEmpty);
+    });
   });
 }

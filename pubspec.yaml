@@ -52,6 +52,9 @@ dependencies:
   # XML parsing (ComicInfo.xml)
   xml: ^6.5.0
 
+  # UUID generation
+  uuid: ^4.5.1
+
   # Localizations
   flutter_localizations:
     sdk: flutter

@@ -1,190 +1,127 @@
-import 'dart:io';
-
+// Database tests updated for new drift-based architecture.
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
+import 'package:mana_reader/core/db/database.dart';
 
-import 'package:mana_reader/database/db_helper.dart';
-import 'package:mana_reader/models/book_model.dart';
-import 'package:mana_reader/metadata/metadata_service.dart';
-import 'package:mana_reader/metadata/metadata_provider.dart';
-
-class _FakePathProviderPlatform extends PathProviderPlatform {
-  final Directory tempDir =
-      Directory.systemTemp.createTempSync('mana_reader_test');
-
-  @override
-  Future<String?> getApplicationDocumentsPath() async {
-    return tempDir.path;
-  }
-}
-
-class _FakeMetadataService extends MetadataService {
-  @override
-  Future<Metadata?> resolve(String query) async {
-    return Metadata(title: 'Resolved', language: 'jp', tags: ['tag']);
-  }
-}
+AppDatabase _makeDb() => AppDatabase.forTesting(NativeDatabase.memory());
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  PathProviderPlatform.instance = _FakePathProviderPlatform();
 
-  group('DbHelper', () {
-    late DbHelper dbHelper;
+  group('SeriesDao', () {
+    late AppDatabase db;
+    setUp(() => db = _makeDb());
+    tearDown(() => db.close());
 
-    setUp(() {
-      PathProviderPlatform.instance = _FakePathProviderPlatform();
-      dbHelper = DbHelper();
+    test('insert and fetch series', () async {
+      await db.seriesDao.upsert(SeriesCompanion(
+        id: const Value('s1'),
+        title: const Value('My Series'),
+        sortKey: const Value('my series'),
+      ));
+      final all = await db.seriesDao.allSeries();
+      expect(all, hasLength(1));
+      expect(all.first.title, 'My Series');
     });
 
-    test('insert and fetch book', () async {
-      final book =
-          BookModel(title: 'Test', path: '/tmp/test.cbz', language: 'en');
-      final id = await dbHelper.insertBook(book);
-      expect(id, isNonZero);
-
-      final books = await dbHelper.fetchBooks();
-      expect(books, hasLength(1));
-      expect(books.first.title, equals('Test'));
+    test('search by title', () async {
+      await db.seriesDao.upsert(SeriesCompanion(
+        id: const Value('s1'),
+        title: const Value('Berserk'),
+        sortKey: const Value('berserk'),
+      ));
+      await db.seriesDao.upsert(SeriesCompanion(
+        id: const Value('s2'),
+        title: const Value('Naruto'),
+        sortKey: const Value('naruto'),
+      ));
+      final results = await db.seriesDao.search('ber');
+      expect(results.map((s) => s.title), contains('Berserk'));
+      expect(results.map((s) => s.title), isNot(contains('Naruto')));
     });
 
-    test('update progress', () async {
-      final book =
-          BookModel(title: 'Test', path: '/tmp/test.cbz', language: 'en');
-      final id = await dbHelper.insertBook(book);
-      await dbHelper.updateProgress(id, 5);
-      final books = await dbHelper.fetchBooks();
-      final updated = books.singleWhere((b) => b.id == id);
-      expect(updated.lastPage, equals(5));
+    test('delete series', () async {
+      await db.seriesDao.upsert(SeriesCompanion(
+        id: const Value('del'),
+        title: const Value('To Delete'),
+        sortKey: const Value('to delete'),
+      ));
+      await db.seriesDao.deleteById('del');
+      final all = await db.seriesDao.allSeries();
+      expect(all, isEmpty);
+    });
+  });
+
+  group('ProgressDao', () {
+    late AppDatabase db;
+    setUp(() => db = _makeDb());
+    tearDown(() => db.close());
+
+    test('upsert and fetch progress', () async {
+      await db.progressDao.upsert(ReadingProgressCompanion(
+        seriesId: const Value('s1'),
+        currentItemId: const Value('i1'),
+        pageIndex: const Value(5),
+        updatedAt: Value(DateTime(2024)),
+      ));
+      final p = await db.progressDao.getProgress('s1');
+      expect(p, isNotNull);
+      expect(p!.pageIndex, 5);
     });
 
-    test('fetch by id', () async {
-      final book =
-          BookModel(title: 'ById', path: '/tmp/test.cbz', language: 'en');
-      final id = await dbHelper.insertBook(book);
-      final fetched = await dbHelper.fetchBook(id);
-      expect(fetched, isNotNull);
-      expect(fetched!.id, equals(id));
-      expect(fetched.title, equals('ById'));
+    test('recentlyRead returns in order', () async {
+      await db.progressDao.upsert(ReadingProgressCompanion(
+        seriesId: const Value('s1'),
+        currentItemId: const Value('i1'),
+        pageIndex: const Value(0),
+        updatedAt: Value(DateTime(2024, 1, 1)),
+      ));
+      await db.progressDao.upsert(ReadingProgressCompanion(
+        seriesId: const Value('s2'),
+        currentItemId: const Value('i2'),
+        pageIndex: const Value(0),
+        updatedAt: Value(DateTime(2024, 1, 2)),
+      ));
+      final recent = await db.progressDao.recentlyRead(limit: 10);
+      expect(recent.first.seriesId, 's2');
+    });
+  });
+
+  group('ManifestDao', () {
+    late AppDatabase db;
+    setUp(() => db = _makeDb());
+    tearDown(() => db.close());
+
+    test('upsert and mark deleted', () async {
+      await db.manifestDao.upsert(SyncManifestCompanion(
+        id: const Value('m1'),
+        sourceId: const Value('src1'),
+        remotePath: const Value('/remote/file.cbz'),
+        cacheState: const Value('remote'),
+      ));
+      await db.manifestDao.markDeleted('m1');
+      final row = await db.manifestDao.getById('m1');
+      expect(row, isNotNull);
+      expect(row!.userDeleted, isTrue);
     });
 
-    test('update book metadata', () async {
-      final id = await dbHelper.insertBook(
-          BookModel(title: 'Old', path: '/tmp/test.cbz', language: 'en'));
-      final updated = BookModel(
-        id: id,
-        title: 'New',
-        path: '/tmp/test.cbz',
-        language: 'jp',
-        author: 'Me',
-        tags: ['tag'],
-      );
-      await dbHelper.updateBook(updated);
-      final fetched = await dbHelper.fetchBook(id);
-      expect(fetched!.title, equals('New'));
-      expect(fetched.language, equals('jp'));
-      expect(fetched.author, equals('Me'));
-      expect(fetched.tags, equals(['tag']));
-    });
-
-    test('delete book removes files', () async {
-      final dir = Directory.systemTemp.createTempSync('mana_reader_book');
-      File('${dir.path}/page1.txt').writeAsStringSync('dummy');
-      final id = await dbHelper.insertBook(
-          BookModel(title: 'Del', path: dir.path, language: 'en'));
-
-      await dbHelper.deleteBook(id);
-
-      final books = await dbHelper.fetchBooks();
-      expect(books, isEmpty);
-      expect(await dir.exists(), isFalse);
-    });
-
-    test('fetchBooks with filters', () async {
-      await dbHelper.insertBook(BookModel(
-          title: 'A',
-          path: '/tmp/a.cbz',
-          language: 'en',
-          author: 'Alice',
-          tags: ['x']));
-      await dbHelper.insertBook(BookModel(
-          title: 'B',
-          path: '/tmp/b.cbz',
-          language: 'en',
-          author: 'Bob',
-          tags: ['y'],
-          lastPage: 2));
-
-      final tagFiltered = await dbHelper.fetchBooks(tags: ['x']);
-      expect(tagFiltered.map((b) => b.title), ['A']);
-
-      final authorFiltered = await dbHelper.fetchBooks(author: 'Bob');
-      expect(authorFiltered.map((b) => b.title), ['B']);
-
-      final unread = await dbHelper.fetchBooks(unread: true);
-      expect(unread.map((b) => b.title), ['A']);
-    });
-
-    test('favorite toggle and filtering', () async {
-      final id = await dbHelper.insertBook(
-          BookModel(title: 'Fav', path: '/tmp/f.cbz', language: 'en'));
-      await dbHelper.toggleFavorite(id, true);
-      var favs = await dbHelper.fetchBooks(favorite: true);
-      expect(favs.map((b) => b.id), contains(id));
-      await dbHelper.toggleFavorite(id, false);
-      favs = await dbHelper.fetchBooks(favorite: true);
-      expect(favs, isEmpty);
-    });
-
-    test('fetchAllAuthors and fetchAllTags', () async {
-      await dbHelper.insertBook(BookModel(
-          title: 'A',
-          path: '/tmp/a.cbz',
-          language: 'en',
-          author: 'Me',
-          tags: ['x', 'y']));
-      await dbHelper.insertBook(BookModel(
-          title: 'B',
-          path: '/tmp/b.cbz',
-          language: 'en',
-          author: 'You',
-          tags: ['y']));
-
-      final authors = await dbHelper.fetchAllAuthors();
-      expect(authors.toSet(), {'Me', 'You'});
-
-      final tags = await dbHelper.fetchAllTags();
-      expect(tags.toSet(), {'x', 'y'});
-    });
-
-    test('importBook uses metadata', () async {
-      final service = _FakeMetadataService();
-      final id = await dbHelper.importBook('/tmp/book.cbz', service);
-      final book = await dbHelper.fetchBook(id);
-      expect(book, isNotNull);
-      expect(book!.title, equals('Resolved'));
-      expect(book.language, equals('jp'));
-      expect(book.tags, ['tag']);
-    });
-
-    test('history insertion and fetch', () async {
-      final id = await dbHelper.insertBook(
-          BookModel(title: 'Hist', path: '/tmp/h.cbz', language: 'en'));
-      await dbHelper.updateProgress(id, 3);
-      final history = await dbHelper.fetchHistory(id);
-      expect(history, isNotEmpty);
-      expect(history.first['page'], 3);
-    });
-
-    test('bookmark add and remove', () async {
-      final id = await dbHelper.insertBook(
-          BookModel(title: 'Bm', path: '/tmp/h.cbz', language: 'en'));
-      await dbHelper.addBookmark(id, 2);
-      var bookmarks = await dbHelper.fetchBookmarks(id);
-      expect(bookmarks, contains(2));
-      await dbHelper.removeBookmark(id, 2);
-      bookmarks = await dbHelper.fetchBookmarks(id);
-      expect(bookmarks, isEmpty);
+    test('bySource returns correct items', () async {
+      await db.manifestDao.upsert(SyncManifestCompanion(
+        id: const Value('m1'),
+        sourceId: const Value('src1'),
+        remotePath: const Value('/r/a.cbz'),
+        cacheState: const Value('remote'),
+      ));
+      await db.manifestDao.upsert(SyncManifestCompanion(
+        id: const Value('m2'),
+        sourceId: const Value('src2'),
+        remotePath: const Value('/r/b.cbz'),
+        cacheState: const Value('remote'),
+      ));
+      final src1 = await db.manifestDao.bySource('src1');
+      expect(src1.map((r) => r.id), contains('m1'));
+      expect(src1.map((r) => r.id), isNot(contains('m2')));
     });
   });
 }
