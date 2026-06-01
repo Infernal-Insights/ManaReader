@@ -7,8 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:mana_reader/core/db/database.dart';
+import 'package:mana_reader/app/providers.dart';
 import 'package:mana_reader/features/library/library_screen.dart';
-import 'package:mana_reader/features/reader/reader_controller.dart';
 
 AppDatabase _makeDb() => AppDatabase.forTesting(NativeDatabase.memory());
 
