@@ -60,11 +60,6 @@ dependencies:
     sdk: flutter
   intl: ^0.20.2
 
-  # Legacy (retained for existing screens / tests)
-  sqflite: ^2.3.2
-  sqflite_common_ffi: ^2.3.0
-  sqflite_common_ffi_web: ^1.0.1
-  native_pdf_renderer: ^3.1.0
 
 dev_dependencies:
   flutter_test:

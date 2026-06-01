@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../db/database.dart';
 import '../source/content_source.dart';
+import 'cache_state.dart';
 
 enum SyncStatus { idle, syncing, error }
 
@@ -29,11 +30,14 @@ class SyncResult {
 /// Only one sync path — every source uses this engine.
 class SyncEngine {
   final AppDatabase _db;
+  bool _syncing = false;
 
   SyncEngine(this._db);
 
   /// Sync a content source against the local manifest.
   Future<SyncResult> sync(ContentSource source) async {
+    if (_syncing) return const SyncResult();
+    _syncing = true;
     int added = 0, updated = 0, removed = 0;
 
     try {
@@ -53,7 +57,7 @@ class SyncEngine {
             id: Value(item.id),
             sourceId: Value(source.id),
             remotePath: Value(item.title),
-            cacheState: const Value('remote'),
+            cacheState: Value(CacheState.remote.value),
             lastSynced: Value(DateTime.now()),
           ));
           added++;
@@ -66,8 +70,8 @@ class SyncEngine {
               existing.lastSynced != null &&
               item.modifiedAt!.isAfter(existing.lastSynced!)) {
             // Invalidate cache
-            if (existing.cacheState == 'cached') {
-              await _db.manifestDao.setCacheState(item.id, 'remote');
+            if (existing.cacheState == CacheState.cached.value) {
+              await _db.manifestDao.setCacheState(item.id, CacheState.remote.value);
               if (existing.localPath != null) {
                 final f = File(existing.localPath!);
                 if (await f.exists()) await f.delete();
@@ -85,7 +89,7 @@ class SyncEngine {
       // Items no longer on remote (but NOT user-deleted) → mark evicted
       for (final row in existingRows) {
         if (!seenIds.contains(row.id) && !row.userDeleted) {
-          await _db.manifestDao.setCacheState(row.id, 'evicted');
+          await _db.manifestDao.setCacheState(row.id, CacheState.evicted.value);
           removed++;
         }
       }
@@ -93,6 +97,8 @@ class SyncEngine {
       return SyncResult(added: added, updated: updated, removed: removed);
     } catch (e) {
       return SyncResult(errorMessage: e.toString());
+    } finally {
+      _syncing = false;
     }
   }
 
@@ -102,7 +108,7 @@ class SyncEngine {
     if (row == null) throw Exception('Item $itemId not in manifest');
     if (row.userDeleted) throw Exception('Item $itemId is user-deleted');
 
-    if (row.cacheState == 'cached' && row.localPath != null) {
+    if (row.cacheState == CacheState.cached.value && row.localPath != null) {
       final f = File(row.localPath!);
       if (await f.exists()) return row.localPath!;
     }
@@ -114,7 +120,7 @@ class SyncEngine {
       id: Value(itemId),
       localPath: Value(file.path),
       contentHash: Value(hash),
-      cacheState: const Value('cached'),
+      cacheState: Value(CacheState.cached.value),
       lastSynced: Value(DateTime.now()),
     ));
 

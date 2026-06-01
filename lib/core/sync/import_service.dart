@@ -4,6 +4,7 @@ import '../archive/archive_factory.dart';
 import '../db/database.dart';
 import '../series/series_grouper.dart';
 import '../source/content_source.dart';
+import 'cache_state.dart';
 
 /// Imports a list of [SourceItem]s into the database, grouping them into series.
 /// This is the only place that bridges archive metadata → library records.
@@ -39,7 +40,7 @@ class ImportService {
           sourceId: Value(sourceId),
           remotePath: Value(item.id),
           localPath: Value(item.id),
-          cacheState: const Value('cached'),
+          cacheState: Value(CacheState.cached.value),
           seriesId: Value(sid),
           lastSynced: Value(DateTime.now()),
         ));

@@ -4,6 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
 import '../db/database.dart';
+import 'cache_state.dart';
 
 /// Manages local cache of downloaded files.
 class CacheManager {
@@ -29,7 +30,7 @@ class CacheManager {
     await _db.manifestDao.upsert(SyncManifestCompanion(
       id: Value(itemId),
       localPath: const Value.absent(),
-      cacheState: const Value('evicted'),
+      cacheState: Value(CacheState.evicted.value),
     ));
   }
 
@@ -37,10 +38,10 @@ class CacheManager {
   Future<void> evictSource(String sourceId) async {
     final rows = await _db.manifestDao.bySource(sourceId);
     for (final row in rows) {
-      if (row.cacheState == 'cached' && row.localPath != null) {
+      if (row.cacheState == CacheState.cached.value && row.localPath != null) {
         final f = File(row.localPath!);
         if (await f.exists()) await f.delete();
-        await _db.manifestDao.setCacheState(row.id, 'evicted');
+        await _db.manifestDao.setCacheState(row.id, CacheState.evicted.value);
       }
     }
   }
@@ -66,8 +67,8 @@ class CacheManager {
     // Reset all cached rows
     final rows = await _db.manifestDao.allItems();
     for (final row in rows) {
-      if (row.cacheState == 'cached') {
-        await _db.manifestDao.setCacheState(row.id, 'evicted');
+      if (row.cacheState == CacheState.cached.value) {
+        await _db.manifestDao.setCacheState(row.id, CacheState.evicted.value);
       }
     }
   }
